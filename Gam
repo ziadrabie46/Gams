@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>الهروب من الباك رومز - ألوان مختلفة للاعبين</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
+        
+        #main-menu {
+            position: absolute; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.95); display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; color: #fff; text-align: center; padding: 20px;
+        }
+        #main-menu h1 { font-size: 2.8rem; margin-bottom: 10px; color: #f1c40f; text-shadow: 0 0 15px #f1c40f; }
+        #main-menu p { margin-bottom: 20px; color: #aaa; font-size: 1rem; }
+        .input-group { margin: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .input-group label { font-size: 1.1rem; color: #f1c40f; }
+        #player-name-input {
+            padding: 12px 20px; font-size: 1.1rem; border-radius: 8px; border: 2px solid #f1c40f;
+            background: #1e272e; color: #fff; text-align: center; outline: none; width: 250px;
+        }
+        #main-menu select, #main-menu button {
+            padding: 12px 24px; font-size: 1.1rem; border-radius: 8px; border: none; margin: 10px;
+        }
+        #main-menu select { background: #2f3542; color: #fff; cursor: pointer; outline: none; }
+        #main-menu button { background: #f1c40f; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
+
+        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        
+        #hud-header {
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px; width: 90%; max-width: 500px;
+        }
+        #tasks-tracker {
+            background: rgba(0,0,0,0.85); border: 2px solid #f1c40f; color: #f1c40f;
+            padding: 6px 20px; border-radius: 20px; font-weight: bold; font-size: 1.1rem;
+        }
+        #danger-container {
+            width: 100%; background: rgba(0,0,0,0.8);
+            border: 2px solid #ff4757; border-radius: 20px; padding: 6px; text-align: center;
+        }
+        #danger-label { color: #fff; font-weight: bold; margin-bottom: 4px; font-size: 0.85rem; }
+        #danger-bar-bg { width: 100%; height: 14px; background: #222; border-radius: 10px; overflow: hidden; }
+        #danger-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ffa500, #ff4757); transition: width 0.3s; }
+
+        #notification-banner {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(46, 213, 115, 0.9); color: #000; padding: 12px 30px;
+            border-radius: 10px; font-size: 1.3rem; font-weight: bold; display: none;
+            box-shadow: 0 0 25px rgba(46, 213, 115, 0.8); z-index: 6; text-align: center;
+        }
+
+        #server-status {
+            position: absolute; bottom: 15px; right: 15px;
+            background: rgba(0,0,0,0.7); color: #2ed573; padding: 5px 15px;
+            border-radius: 8px; font-size: 0.9rem; font-weight: bold; z-index: 6;
+        }
+
+        #joystick-zone {
+            position: absolute; bottom: 30px; left: 30px;
+            width: 120px; height: 120px; background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%;
+            touch-action: none; pointer-events: auto;
+        }
+        #joystick-knob {
+            width: 50px; height: 50px; background: rgba(241, 196, 15, 0.9);
+            border-radius: 50%; position: absolute; top: 35px; left: 35px; pointer-events: none;
+        }
+        #action-btn {
+            position: absolute; bottom: 40px; right: 40px;
+            width: 85px; height: 85px; background: rgba(255, 71, 87, 0.9);
+            border: 2px solid #fff; border-radius: 50%; color: #fff;
+            font-weight: bold; font-size: 1.2rem; display: none;
+            justify-content: center; align-items: center; cursor: pointer; pointer-events: auto;
+        }
+        #touch-camera-zone {
+            position: absolute; top: 0; right: 0; width: 65%; height: 100%;
+            pointer-events: auto; touch-action: none;
+        }
+
+        #question-card {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 500px; background: rgba(15, 15, 15, 0.98);
+            border: 2px solid #f1c40f; border-radius: 15px; padding: 25px;
+            text-align: center; color: #fff; pointer-events: auto; display: none;
+        }
+        #question-text { font-size: 1.3rem; margin-bottom: 20px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-btn {
+            background: #2f3542; border: 1px solid #57606f; color: #fff;
+            padding: 12px; font-size: 1rem; border-radius: 8px; cursor: pointer;
+        }
+        .option-btn:hover { background: #f1c40f; color: #000; font-weight: bold; }
+
+        #game-over {
+            position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; color: #fff;
+        }
+        #game-over h2 { font-size: 3.2rem; margin-bottom: 10px; }
+        #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+    <div id="main-menu">
+        <h1>الهروب من الباك رومز 3D</h1>
+        <p>ألوان مختلفة لكل لاعب | اصطدام صلب بالجدران | لعب جماعي أونلاين</p>
+        
+        <div class="input-group">
+            <label for="player-name-input">اسم اللاعب:</label>
+            <input type="text" id="player-name-input" placeholder="ادخل اسمك..." maxlength="12" value="اللاعب 1">
+        </div>
+
+        <div class="input-group">
+            <label for="category-select">اختر سيرفر المادة:</label>
+            <select id="category-select">
+                <option value="math_room">سيرفر الرياضيات</option>
+                <option value="general_room">سيرفر معلومات عامة</option>
+            </select>
+        </div>
+
+        <button onclick="startGame()">دخول السيرفر</button>
+    </div>
+
+    <div id="ui-container">
+        <div id="hud-header">
+            <div id="tasks-tracker">المهام المكتملة: 0 / 25</div>
+            <div id="danger-container">
+                <div id="danger-label">اقتراب وحش الباك رومز!</div>
+                <div id="danger-bar-bg">
+                    <div id="danger-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="notification-banner">تم إنهاء المهمة!</div>
+        <div id="server-status">جاري التوصيل بالسيرفر...</div>
+        <div id="touch-camera-zone"></div>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
+
+        <div id="question-card">
+            <div id="question-text">السؤال...</div>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+    </div>
+
+    <div id="game-over">
+        <h2 id="game-over-title">Game Over</h2>
+        <p id="game-over-msg" style="margin-bottom: 20px;"></p>
+        <button onclick="resetToMenu()">الرجوع للقائمة</button>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'explode') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 1.2);
+                gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 1.2);
+            }
+        }
+
+        const questionBank = {
+            math_room: [
+                { q: "7 × 8 = ؟", options: ["54", "56", "64", "48"], correct: 1 },
+                { q: "جذر العدد 100 هو:", options: ["8", "9", "10", "12"], correct: 2 },
+                { q: "25 + 35 = ؟", options: ["60", "55", "65", "50"], correct: 0 },
+                { q: "100 ÷ 4 = ؟", options: ["20", "25", "30", "15"], correct: 1 },
+                { q: "9 × 9 = ؟", options: ["72", "81", "90", "89"], correct: 1 }
+            ],
+            general_room: [
+                { q: "ما هي عاصمة مصر؟", options: ["الإسكندرية", "القاهرة", "الجيزة", "أسوان"], correct: 1 },
+                { q: "أكبر كوكب في المجموعة الشمسية:", options: ["الأرض", "المشتري", "زحل", "المريخ"], correct: 1 },
+                { q: "كم عدد قارات العالم؟", options: ["5", "6", "7", "8"], correct: 2 },
+                { q: "أطول نهر في العالم:", options: ["النيل", "الأمازون", "الفرات", "الراين"], correct: 0 }
+            ]
+        };
+
+        // توليد لون عشوائي مميز لكل لاعب
+        const playerColorsList = [0x00a8ff, 0x9b59b6, 0x2ecc71, 0xe67e22, 0xe84393, 0x1abc9c, 0xf1c40f];
+        let myPlayerColor = playerColorsList[Math.floor(Math.random() * playerColorsList.length)];
+
+        let currentQuestions = [];
+        let activeTerminal = null;
+        let isGameOver = false;
+        let inQuestionMenu = false;
+        let isCinematicActive = false;
+        let playerName = "اللاعب 1";
+        let solvedCount = 0;
+        let currentPhase = 1;
+
+        let joystickInput = { x: 0, y: 0 };
+        let cameraYaw = 0;
+        let cameraPitch = 0.35;
+
+        let peer = null;
+        let connections = {};
+        let remotePlayers = {};
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111100);
+        scene.fog = new THREE.FogExp2(0x111100, 0.025);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xd4ac0d, 0.5);
+        scene.add(ambientLight);
+
+        const MAP_SIZE = 160;
+        const hSize = MAP_SIZE / 2;
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4ac0d, roughness: 0.9 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x555522, roughness: 0.9 });
+        
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE), floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE), floorMat);
+        ceiling.rotation.x = Math.PI / 2;
+        ceiling.position.y = 10;
+        scene.add(ceiling);
+
+        const wallBoundingBoxes = [];
+
+        function createWall(w, h, d, x, y, z) {
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+            wall.position.set(x, y, z);
+            scene.add(wall);
+            const box = new THREE.Box3().setFromObject(wall);
+            wallBoundingBoxes.push(box);
+        }
+
+        createWall(MAP_SIZE, 10, 2, 0, 5, -hSize);
+        createWall(MAP_SIZE, 10, 2, 0, 5, hSize);
+        createWall(2, 10, MAP_SIZE, -hSize, 5, 0);
+        createWall(2, 10, MAP_SIZE, hSize, 5, 0);
+
+        const mazeWalls = [
+            { w: 40, d: 2, x: -30, z: -30 }, { w: 2, d: 50, x: -20, z: 10 },
+            { w: 60, d: 2, x: 20, z: -40 },  { w: 2, d: 40, x: 30, z: 20 },
+            { w: 50, d: 2, x: -10, z: 40 },  { w: 2, d: 60, x: 0, z: -10 }
+        ];
+        mazeWalls.forEach(w => createWall(w.w, 10, w.d, w.x, 5, w.z));
+
+        function checkCollision(targetPosition, radius = 0.8) {
+            const playerBox = new THREE.Box3(
+                new THREE.Vector3(targetPosition.x - radius, 0, targetPosition.z - radius),
+                new THREE.Vector3(targetPosition.x + radius, 2, targetPosition.z + radius)
+            );
+
+            for (let box of wallBoundingBoxes) {
+                if (playerBox.intersectsBox(box)) return true;
+            }
+            return false;
+        }
+
+        // إنشاء لاعب مع لون محدد
+        const playerGroup = new THREE.Group();
+        const playerBodyMat = new THREE.MeshStandardMaterial({ color: myPlayerColor });
+        const playerBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), playerBodyMat);
+        playerBody.position.y = 0.9;
+        playerGroup.add(playerBody);
+
+        const playerHead = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshStandardMaterial({ color: 0xfbc531 }));
+        playerHead.position.y = 2.1;
+        playerGroup.add(playerHead);
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 256; canvas.height = 64;
+        function updatePlayerNameTag(name) {
+            ctx.clearRect(0, 0, 256, 64);
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(0, 0, 256, 64);
+            ctx.font = 'Bold 28px Arial'; ctx.fillStyle = '#f1c40f'; ctx.textAlign = 'center';
+            ctx.fillText(name, 128, 42);
+            nameTexture.needsUpdate = true;
+        }
+        const nameTexture = new THREE.CanvasTexture(canvas);
+        const nameSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: nameTexture }));
+        nameSprite.position.set(0, 3.2, 0); nameSprite.scale.set(3, 0.75, 1);
+        playerGroup.add(nameSprite);
+        playerGroup.position.set(0, 0, 60);
+        scene.add(playerGroup);
+
+        // إنشاء لاعب آخر مع لونه الخاص
+        function createRemotePlayerMesh(name, colorHex) {
+            const group = new THREE.Group();
+            const rBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), new THREE.MeshStandardMaterial({ color: colorHex || 0xe74c3c }));
+            rBody.position.y = 0.9;
+            group.add(rBody);
+
+            const rHead = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshStandardMaterial({ color: 0xe67e22 }));
+            rHead.position.y = 2.1;
+            group.add(rHead);
+
+            const rCanvas = document.createElement('canvas');
+            const rCtx = rCanvas.getContext('2d');
+            rCanvas.width = 256; rCanvas.height = 64;
+            rCtx.fillStyle = 'rgba(0,0,0,0.6)'; rCtx.fillRect(0, 0, 256, 64);
+            rCtx.font = 'Bold 28px Arial'; rCtx.fillStyle = '#2ed573'; rCtx.textAlign = 'center';
+            rCtx.fillText(name, 128, 42);
+
+            const rSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(rCanvas) }));
+            rSprite.position.set(0, 3.2, 0); rSprite.scale.set(3, 0.75, 1);
+            group.add(rSprite);
+
+            scene.add(group);
+            return group;
+        }
+
+        const monsterGroup = new THREE.Group();
+        let monsterBodyMesh;
+
+        function buildMonsterPhase1() {
+            while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
+            
+            const monsterMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+            monsterBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(3, 5, 3), monsterMat);
+            monsterBodyMesh.position.y = 2.5;
+            monsterGroup.add(monsterBodyMesh);
+
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.4), eyeMat);
+            const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.4), eyeMat);
+            eye1.position.set(-0.7, 3.5, 1.5); eye2.position.set(0.7, 3.5, 1.5);
+            monsterGroup.add(eye1); monsterGroup.add(eye2);
+        }
+
+        function buildMonsterPhase2() {
+            while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
+
+            const monsterMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.2 });
+            monsterBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(4.5, 7.5, 4.5), monsterMat);
+            monsterBodyMesh.position.y = 3.75;
+            monsterGroup.add(monsterBodyMesh);
+
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0x440000, side: THREE.DoubleSide });
+            const leftWing = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), wingMat);
+            leftWing.position.set(-5, 5, -1); leftWing.rotation.y = Math.PI / 4;
+            const rightWing = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), wingMat);
+            rightWing.position.set(5, 5, -1); rightWing.rotation.y = -Math.PI / 4;
+            monsterGroup.add(leftWing); monsterGroup.add(rightWing);
+
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
+            for(let i=0; i<4; i++) {
+                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.45), eyeMat);
+                eye.position.set(-1.2 + (i * 0.8), 5.5, 2.3);
+                monsterGroup.add(eye);
+            }
+        }
+
+        buildMonsterPhase1();
+        monsterGroup.position.set(0, 0, -60);
+        scene.add(monsterGroup);
+
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+        function createExplosionParticles(pos, colorHex = 0xff4757) {
+            for(let i=0; i<60; i++) {
+                const p = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.2 + Math.random()*0.3),
+                    new THREE.MeshBasicMaterial({ color: colorHex })
+                );
+                p.position.copy(pos);
+                p.userData = {
+                    vel: new THREE.Vector3((Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5),
+                    life: 1.0
+                };
+                particleGroup.add(p);
+            }
+        }
+
+        function updateParticles() {
+            for(let i = particleGroup.children.length - 1; i >= 0; i--) {
+                const p = particleGroup.children[i];
+                p.position.add(p.userData.vel);
+                p.userData.life -= 0.025;
+                p.scale.multiplyScalar(0.95);
+                if(p.userData.life <= 0) particleGroup.remove(p);
+            }
+        }
+
+        const terminals = [];
+        for (let i = 0; i < 25; i++) {
+            const group = new THREE.Group();
+            const baseBox = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.5, 0.6), new THREE.MeshStandardMaterial({ color: 0x2c3e50 }));
+            group.add(baseBox);
+
+            const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.8), new THREE.MeshBasicMaterial({ color: 0x00d2d3 }));
+            screenMesh.position.set(0, 0.2, 0.32);
+            group.add(screenMesh);
+
+            const arrowMat = new THREE.MeshBasicMaterial({ color: 0xffea00, depthTest: false, transparent: true });
+            const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.8, 4), arrowMat);
+            arrow.rotation.x = Math.PI;
+            arrow.position.set(0, 4.2, 0);
+            arrow.renderOrder = 999;
+            group.add(arrow);
+
+            let posX, posZ, testPos;
+            do {
+                posX = (Math.random() - 0.5) * (MAP_SIZE - 25);
+                posZ = (Math.random() - 0.5) * (MAP_SIZE - 25);
+                testPos = new THREE.Vector3(posX, 0, posZ);
+            } while (checkCollision(testPos, 2.0));
+
+            group.position.set(posX, 1.75, posZ);
+            scene.add(group);
+
+            terminals.push({ group, arrow, screenMesh, solved: false, index: i });
+        }
+
+        const touchCamZone = document.getElementById('touch-camera-zone');
+        let isCamDragging = false, lastTouchPos = { x: 0, y: 0 }, activeCamTouchId = null;
+
+        touchCamZone.addEventListener('touchstart', e => {
+            if (inQuestionMenu || isCinematicActive) return;
+            const touch = e.changedTouches[0];
+            activeCamTouchId = touch.identifier;
+            lastTouchPos = { x: touch.clientX, y: touch.clientY };
+        });
+
+        window.addEventListener('touchmove', e => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === activeCamTouchId) {
+                    cameraYaw -= (touch.clientX - lastTouchPos.x) * 0.005;
+                    cameraPitch = Math.max(0.1, Math.min(1.1, cameraPitch + (touch.clientY - lastTouchPos.y) * 0.004));
+                    lastTouchPos = { x: touch.clientX, y: touch.clientY };
+                }
+            }
+        });
+
+        window.addEventListener('touchend', e => {
+            for (let touch of e.changedTouches) if (touch.identifier === activeCamTouchId) activeCamTouchId = null;
+        });
+
+        window.addEventListener('mousedown', e => {
+            if (e.target.tagName !== 'CANVAS' || inQuestionMenu || isCinematicActive) return;
+            isCamDragging = true; lastTouchPos = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('mousemove', e => {
+            if (!isCamDragging) return;
+            cameraYaw -= (e.clientX - lastTouchPos.x) * 0.004;
+            cameraPitch = Math.max(0.1, Math.min(1.1, cameraPitch + (e.clientY - lastTouchPos.y) * 0.003));
+            lastTouchPos = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('mouseup', () => isCamDragging = false);
+
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickKnob = document.getElementById('joystick-knob');
+        let joystickActive = false, joyTouchId = null, joyCenter = { x: 0, y: 0 };
+
+        joystickZone.addEventListener('touchstart', e => {
+            if (isCinematicActive) return;
+            const touch = e.changedTouches[0];
+            joyTouchId = touch.identifier; joystickActive = true;
+            const rect = joystickZone.getBoundingClientRect();
+            joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            updateJoystick(touch.clientX, touch.clientY);
+        });
+
+        window.addEventListener('touchmove', e => {
+            if (!joystickActive || isCinematicActive) return;
+            for (let touch of e.changedTouches) if (touch.identifier === joyTouchId) updateJoystick(touch.clientX, touch.clientY);
+        });
+
+        window.addEventListener('touchend', e => {
+            for (let touch of e.changedTouches) {
+                if (touch.identifier === joyTouchId) {
+                    joystickActive = false; joystickInput = { x: 0, y: 0 };
+                    joystickKnob.style.left = '35px'; joystickKnob.style.top = '35px';
+                }
+            }
+        });
+
+        function updateJoystick(clientX, clientY) {
+            let dx = clientX - joyCenter.x, dy = clientY - joyCenter.y;
+            const dist = Math.sqrt(dx * dx + dy * dy), maxRadius = 40;
+            if (dist > maxRadius) { dx = (dx / dist) * maxRadius; dy = (dy / dist) * maxRadius; }
+            joystickKnob.style.left = (35 + dx) + 'px'; joystickKnob.style.top = (35 + dy) + 'px';
+            joystickInput.x = dx / maxRadius; joystickInput.y = dy / maxRadius;
+        }
+
+        const keys = {};
+        window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.code === "Space") interactWithTerminal(); });
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+        function updatePlayerAndCamera() {
+            if (inQuestionMenu || isGameOver || isCinematicActive) return;
+
+            let moveX = joystickActive ? joystickInput.x : 0;
+            let moveZ = joystickActive ? joystickInput.y : 0;
+
+            if (!joystickActive) {
+                if (keys['w'] || keys['arrowup']) moveZ -= 1;
+                if (keys['s'] || keys['arrowdown']) moveZ += 1;
+                if (keys['a'] || keys['arrowleft']) moveX -= 1;
+                if (keys['d'] || keys['arrowright']) moveX += 1;
+            }
+
+            const speed = 0.38;
+            if (Math.abs(moveX) > 0.1 || Math.abs(moveZ) > 0.1) {
+                const forward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw)).normalize();
+                const right = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw)).normalize();
+                const moveDirection = new THREE.Vector3().addScaledVector(forward, -moveZ).addScaledVector(right, moveX).normalize();
+
+                const nextPosX = playerGroup.position.clone().addScaledVector(new THREE.Vector3(moveDirection.x, 0, 0), speed);
+                if (!checkCollision(nextPosX, 0.9)) {
+                    playerGroup.position.x = nextPosX.x;
+                }
+
+                const nextPosZ = playerGroup.position.clone().addScaledVector(new THREE.Vector3(0, 0, moveDirection.z), speed);
+                if (!checkCollision(nextPosZ, 0.9)) {
+                    playerGroup.position.z = nextPosZ.z;
+                }
+
+                playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
+                broadcastPosition();
+            }
+
+            const camDistance = 14;
+            camera.position.set(
+                playerGroup.position.x + camDistance * Math.sin(cameraYaw) * Math.cos(cameraPitch),
+                playerGroup.position.y + camDistance * Math.sin(cameraPitch) + 2,
+                playerGroup.position.z + camDistance * Math.cos(cameraYaw) * Math.cos(cameraPitch)
+            );
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
+        }
+
+        // الشبكة وإرسال بيانات اللون للآخرين
+        function initPeerServer(category) {
+            const myId = category + "_" + Math.floor(Math.random() * 8999 + 1000);
+            peer = new Peer(myId);
+
+            peer.on('open', (id) => {
+                document.getElementById('server-status').innerText = "متصل بالسيرفر: " + (category === "math_room" ? "الرياضيات" : "المعلومات العامة");
+                
+                for (let i = 1000; i <= 9999; i += 1000) {
+                    let targetId = category + "_" + i;
+                    if (targetId !== id && !connections[targetId]) {
+                        connectToPeer(targetId);
+                    }
+                }
+            });
+
+            peer.on('connection', (conn) => setupConnection(conn));
+        }
+
+        function connectToPeer(targetId) {
+            const conn = peer.connect(targetId);
+            if (conn) setupConnection(conn);
+        }
+
+        function setupConnection(conn) {
+            conn.on('open', () => {
+                connections[conn.peer] = conn;
+                conn.send({ type: 'init', name: playerName, color: myPlayerColor, x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z });
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'init') {
+                    if (!remotePlayers[conn.peer]) {
+                        remotePlayers[conn.peer] = createRemotePlayerMesh(data.name, data.color);
+                    }
+                } else if (data.type === 'move') {
+                    if (remotePlayers[conn.peer]) {
+                        remotePlayers[conn.peer].position.set(data.x, data.y, data.z);
+                        remotePlayers[conn.peer].rotation.y = data.rotation;
+                    }
+                } else if (data.type === 'task_solved') {
+                    const term = terminals[data.index];
+                    if (term && !term.solved) {
+                        term.solved = true;
+                        term.arrow.visible = false;
+                        term.screenMesh.material.color.setHex(0x2ed573);
+                    }
+                }
+            });
+
+            conn.on('close', () => {
+                if (remotePlayers[conn.peer]) {
+                    scene.remove(remotePlayers[conn.peer]);
+                    delete remotePlayers[conn.peer];
+                }
+                delete connections[conn.peer];
+            });
+        }
+
+        function broadcastPosition() {
+            const data = {
+                type: 'move',
+                x: playerGroup.position.x,
+                y: playerGroup.position.y,
+                z: playerGroup.position.z,
+                rotation: playerGroup.rotation.y
+            };
+            Object.values(connections).forEach(conn => { if (conn.open) conn.send(data); });
+        }
+
+        function broadcastTaskSolved(index) {
+            Object.values(connections).forEach(conn => { if (conn.open) conn.send({ type: 'task_solved', index }); });
+        }
+
+        function triggerPhase2Cinematic() {
+            isCinematicActive = true;
+            showNotification("تحذير! الوحش يتطور ويتشكل من جديد!");
+
+            let targetCamPos = monsterGroup.position.clone().add(new THREE.Vector3(0, 8, 18));
+            let frame = 0;
+
+            let animInterval = setInterval(() => {
+                frame++;
+                camera.position.lerp(targetCamPos, 0.08);
+                camera.lookAt(monsterGroup.position.x, monsterGroup.position.y + 3, monsterGroup.position.z);
+
+                monsterGroup.position.x += (Math.random() - 0.5) * 0.8;
+                monsterGroup.position.z += (Math.random() - 0.5) * 0.8;
+                createExplosionParticles(monsterGroup.position.clone().add(new THREE.Vector3(0, 3, 0)), 0xffa500);
+
+                if (frame === 60) {
+                    playSound('explode');
+                    createExplosionParticles(monsterGroup.position.clone().add(new THREE.Vector3(0, 3, 0)), 0xff4757);
+                    buildMonsterPhase2();
+                }
+
+                if (frame >= 120) {
+                    clearInterval(animInterval);
+                    isCinematicActive = false;
+                    currentPhase = 2;
+                    showNotification("المرحلة الثانية بدأت! الوحش أصبح أسرع وأشرس!");
+                }
+            }, 30);
+        }
+
+        function triggerVictoryCinematic() {
+            isCinematicActive = true;
+            showNotification("تم إكمال جميع المهام! هزيمة وحش الباك رومز!");
+
+            let targetCamPos = monsterGroup.position.clone().add(new THREE.Vector3(0, 10, 22));
+            let frame = 0;
+
+            let animInterval = setInterval(() => {
+                frame++;
+                camera.position.lerp(targetCamPos, 0.08);
+                camera.lookAt(monsterGroup.position.x, monsterGroup.position.y + 3, monsterGroup.position.z);
+
+                monsterGroup.position.y -= 0.05;
+                monsterGroup.rotation.y += 0.2;
+                createExplosionParticles(monsterGroup.position.clone().add(new THREE.Vector3(0, 3, 0)), 0x00ff44);
+
+                if (frame % 15 === 0) playSound('explode');
+
+                if (frame >= 110) {
+                    clearInterval(animInterval);
+                    createExplosionParticles(monsterGroup.position, 0xffff00);
+                    scene.remove(monsterGroup);
+                    endGame(true, `فوز أسطوري يا ${playerName}! قمت بإتمام الـ 25 مهمة والقضاء على الوحش!`);
+                }
+            }, 30);
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            playerName = nameInput !== "" ? nameInput : "اللاعب 1";
+            updatePlayerNameTag(playerName);
+
+            const category = document.getElementById('category-select').value;
+            currentQuestions = [...questionBank[category]];
+            
+            solvedCount = 0;
+            currentPhase = 1;
+            document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
+
+            buildMonsterPhase1();
+            terminals.forEach(t => {
+                t.solved = false;
+                t.arrow.visible = true;
+                t.screenMesh.material.color.setHex(0x00d2d3);
+            });
+
+            playerGroup.position.set(0, 0, 60);
+            monsterGroup.position.set(0, 0, -60);
+            isGameOver = false; inQuestionMenu = false; isCinematicActive = false;
+
+            initPeerServer(category);
+
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+        }
+
+        function checkTerminalProximity() {
+            if (inQuestionMenu || isGameOver || isCinematicActive) return;
+            activeTerminal = null;
+            document.getElementById('action-btn').style.display = 'none';
+
+            terminals.forEach(t => {
+                if (t.solved) return;
+                if (playerGroup.position.distanceTo(t.group.position) < 5) {
+                    activeTerminal = t;
+                    document.getElementById('action-btn').style.display = 'flex';
+                }
+            });
+        }
+
+        function interactWithTerminal() {
+            if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
+
+            inQuestionMenu = true;
+            document.getElementById('action-btn').style.display = 'none';
+            
+            const qData = currentQuestions[activeTerminal.index % currentQuestions.length];
+            document.getElementById('question-text').innerText = qData.q;
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(idx, qData.correct);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('question-card').style.display = 'block';
+        }
+
+        function handleAnswer(selectedIndex, correctIndex) {
+            document.getElementById('question-card').style.display = 'none';
+            inQuestionMenu = false;
+
+            if (selectedIndex === correctIndex) {
+                playSound('success');
+                activeTerminal.solved = true;
+                activeTerminal.arrow.visible = false;
+                activeTerminal.screenMesh.material.color.setHex(0x2ed573);
+                
+                broadcastTaskSolved(activeTerminal.index);
+
+                solvedCount++;
+                document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
+                showNotification(`تم إنهاء المهمة (${solvedCount}/25)!`);
+
+                if (solvedCount === 12 && currentPhase === 1) {
+                    triggerPhase2Cinematic();
+                } else if (solvedCount === 25) {
+                    triggerVictoryCinematic();
+                }
+            } else {
+                playSound('error');
+                const dir = playerGroup.position.clone().sub(monsterGroup.position).normalize();
+                const nextPos = monsterGroup.position.clone().addScaledVector(dir, 10);
+                if (!checkCollision(nextPos, 2.0)) monsterGroup.position.copy(nextPos);
+            }
+        }
+
+        function showNotification(msg) {
+            const banner = document.getElementById('notification-banner');
+            banner.innerText = msg;
+            banner.style.display = 'block';
+            setTimeout(() => banner.style.display = 'none', 3500);
+        }
+
+        function updateMonsterAI() {
+            if (isGameOver || isCinematicActive) return;
+
+            const monsterSpeed = currentPhase === 1 ? 0.05 : 0.095;
+            monsterGroup.lookAt(playerGroup.position.x, 0, playerGroup.position.z);
+
+            const moveDir = new THREE.Vector3(0, 0, 1).applyQuaternion(monsterGroup.quaternion).normalize();
+            const nextMonsterPos = monsterGroup.position.clone().addScaledVector(moveDir, monsterSpeed);
+
+            if (!checkCollision(nextMonsterPos, 2.0)) {
+                monsterGroup.position.copy(nextMonsterPos);
+            } else {
+                const slidePos = monsterGroup.position.clone().addScaledVector(new THREE.Vector3(-moveDir.z, 0, moveDir.x), monsterSpeed);
+                if (!checkCollision(slidePos, 2.0)) {
+                    monsterGroup.position.copy(slidePos);
+                }
+            }
+
+            const distance = monsterGroup.position.distanceTo(playerGroup.position);
+            const maxDist = 70;
+            const dangerPercentage = Math.max(0, Math.min(100, ((maxDist - distance) / maxDist) * 100));
+            document.getElementById('danger-bar').style.width = dangerPercentage + '%';
+
+            if (distance < 3.5) {
+                playSound('error');
+                endGame(false, `للأسف يا ${playerName}، التهمك الوحش في المتاهة!`);
+            }
+        }
+
+        function endGame(won, message) {
+            isGameOver = true;
+            document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "خسارة!";
+            document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
+            document.getElementById('game-over-msg').innerText = message;
+            document.getElementById('game-over').style.display = 'flex';
+        }
+
+        function resetToMenu() {
+            location.reload();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            updatePlayerAndCamera();
+            checkTerminalProximity();
+            updateMonsterAI();
+            updateParticles();
+
+            terminals.forEach(t => {
+                if (!t.solved) {
+                    t.arrow.position.y = 4.2 + Math.sin(Date.now() * 0.005) * 0.3;
+                    t.arrow.rotation.y += 0.04;
+                }
+            });
+
+            if (!isCinematicActive) {
+                monsterGroup.position.y = Math.sin(Date.now() * 0.006) * 0.3;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
