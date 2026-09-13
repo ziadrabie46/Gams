@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - الوحش الفضائي وأسئلة إفريقيا</title>
+    <title>الهروب من الباك رومز - الوحش الفضائي والمؤقت</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
@@ -34,10 +34,12 @@
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center; gap: 8px; width: 90%; max-width: 500px;
         }
-        #tasks-tracker {
+        #hud-top-row { display: flex; justify-content: space-between; width: 100%; gap: 10px; }
+        #tasks-tracker, #timer-display {
             background: rgba(0,0,0,0.85); border: 2px solid #f1c40f; color: #f1c40f;
-            padding: 6px 20px; border-radius: 20px; font-weight: bold; font-size: 1.1rem;
+            padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; flex: 1; text-align: center;
         }
+        #timer-display { border-color: #ff4757; color: #ff4757; }
         #danger-container {
             width: 100%; background: rgba(0,0,0,0.8);
             border: 2px solid #ff4757; border-radius: 20px; padding: 6px; text-align: center;
@@ -47,7 +49,7 @@
         #danger-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ffa500, #ff4757); transition: width 0.3s; }
 
         #notification-banner {
-            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 140px; left: 50%; transform: translateX(-50%);
             background: rgba(46, 213, 115, 0.9); color: #000; padding: 12px 30px;
             border-radius: 10px; font-size: 1.3rem; font-weight: bold; display: none;
             box-shadow: 0 0 25px rgba(46, 213, 115, 0.8); z-index: 6; text-align: center;
@@ -98,9 +100,10 @@
         #game-over {
             position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; color: #fff;
+            z-index: 20; color: #fff; text-align: center; padding: 20px;
         }
         #game-over h2 { font-size: 3.2rem; margin-bottom: 10px; }
+        #blame-msg { font-size: 1.5rem; color: #ff4757; font-weight: bold; margin-bottom: 15px; text-shadow: 0 0 10px #ff4757; }
         #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -110,7 +113,7 @@
 
     <div id="main-menu">
         <h1>الهروب من الباك رومز 3D</h1>
-        <p>أسئلة قارة إفريقيا كاملة | تطوير شكل الوحش الفضائي | ألوان لاعبين مختلفة</p>
+        <p>نظام الوقت | ملاحقة أسرع | مشهد ضرب اللاعب المتسبب في الخسارة</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
@@ -131,7 +134,10 @@
 
     <div id="ui-container">
         <div id="hud-header">
-            <div id="tasks-tracker">المهام المكتملة: 0 / 25</div>
+            <div id="hud-top-row">
+                <div id="tasks-tracker">المهام: 0 / 25</div>
+                <div id="timer-display">الوقت: 01:30</div>
+            </div>
             <div id="danger-container">
                 <div id="danger-label">اقتراب وحش الباك رومز!</div>
                 <div id="danger-bar-bg">
@@ -154,6 +160,7 @@
 
     <div id="game-over">
         <h2 id="game-over-title">Game Over</h2>
+        <div id="blame-msg"></div>
         <p id="game-over-msg" style="margin-bottom: 20px;"></p>
         <button onclick="resetToMenu()">الرجوع للقائمة</button>
     </div>
@@ -226,16 +233,10 @@
             ],
             math_room: [
                 { q: "7 × 8 = ؟", options: ["54", "56", "64", "48"], correct: 1 },
-                { q: "جذر العدد 100 هو:", options: ["8", "9", "10", "12"], correct: 2 },
-                { q: "25 + 35 = ؟", options: ["60", "55", "65", "50"], correct: 0 },
-                { q: "100 ÷ 4 = ؟", options: ["20", "25", "30", "15"], correct: 1 },
-                { q: "9 × 9 = ؟", options: ["72", "81", "90", "89"], correct: 1 }
+                { q: "جذر العدد 100 هو:", options: ["8", "9", "10", "12"], correct: 2 }
             ],
             general_room: [
-                { q: "ما هي عاصمة مصر؟", options: ["الإسكندرية", "القاهرة", "الجيزة", "أسوان"], correct: 1 },
-                { q: "أكبر كوكب في المجموعة الشمسية:", options: ["الأرض", "المشتري", "زحل", "المريخ"], correct: 1 },
-                { q: "كم عدد قارات العالم؟", options: ["5", "6", "7", "8"], correct: 2 },
-                { q: "أطول نهر في العالم:", options: ["النيل", "الأمازون", "الفرات", "الراين"], correct: 0 }
+                { q: "ما هي عاصمة مصر؟", options: ["الإسكندرية", "القاهرة", "الجيزة", "أسوان"], correct: 1 }
             ]
         };
 
@@ -250,6 +251,9 @@
         let playerName = "زياد";
         let solvedCount = 0;
         let currentPhase = 1;
+
+        let timeRemaining = 90; 
+        let timerInterval = null;
 
         let joystickInput = { x: 0, y: 0 };
         let cameraYaw = 0;
@@ -376,7 +380,6 @@
         const monsterGroup = new THREE.Group();
         let monsterBodyMesh;
 
-        // الطور الأول للوحش الفضائي
         function buildMonsterPhase1() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
             
@@ -392,7 +395,6 @@
             monsterGroup.add(eye1); monsterGroup.add(eye2);
         }
 
-        // الطور الثاني المتطور للوحش الفضائي مع أجنحة وأعضاء إضافية
         function buildMonsterPhase2() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
 
@@ -572,14 +574,10 @@
                 const moveDirection = new THREE.Vector3().addScaledVector(forward, -moveZ).addScaledVector(right, moveX).normalize();
 
                 const nextPosX = playerGroup.position.clone().addScaledVector(new THREE.Vector3(moveDirection.x, 0, 0), speed);
-                if (!checkCollision(nextPosX, 0.9)) {
-                    playerGroup.position.x = nextPosX.x;
-                }
+                if (!checkCollision(nextPosX, 0.9)) playerGroup.position.x = nextPosX.x;
 
                 const nextPosZ = playerGroup.position.clone().addScaledVector(new THREE.Vector3(0, 0, moveDirection.z), speed);
-                if (!checkCollision(nextPosZ, 0.9)) {
-                    playerGroup.position.z = nextPosZ.z;
-                }
+                if (!checkCollision(nextPosZ, 0.9)) playerGroup.position.z = nextPosZ.z;
 
                 playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
                 broadcastPosition();
@@ -592,6 +590,23 @@
                 playerGroup.position.z + camDistance * Math.cos(cameraYaw) * Math.cos(cameraPitch)
             );
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (isGameOver || isCinematicActive) return;
+                timeRemaining--;
+
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer-display').innerText = `الوقت: ${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    triggerDefeatCinematic(playerName, "انتهى الوقت المحدد للمرحلة ولم يتم إكمال المهام!");
+                }
+            }, 1000);
         }
 
         function initPeerServer(category) {
@@ -644,6 +659,8 @@
                         term.arrow.visible = false;
                         term.screenMesh.material.color.setHex(0x2ed573);
                     }
+                } else if (data.type === 'team_failed') {
+                    triggerDefeatCinematic(data.blamePlayer, data.reason);
                 }
             });
 
@@ -657,13 +674,7 @@
         }
 
         function broadcastPosition() {
-            const data = {
-                type: 'move',
-                x: playerGroup.position.x,
-                y: playerGroup.position.y,
-                z: playerGroup.position.z,
-                rotation: playerGroup.rotation.y
-            };
+            const data = { type: 'move', x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z, rotation: playerGroup.rotation.y };
             Object.values(connections).forEach(conn => { if (conn.open) conn.send(data); });
         }
 
@@ -671,9 +682,16 @@
             Object.values(connections).forEach(conn => { if (conn.open) conn.send({ type: 'task_solved', index }); });
         }
 
+        function broadcastTeamFailed(blamePlayer, reason) {
+            Object.values(connections).forEach(conn => { if (conn.open) conn.send({ type: 'team_failed', blamePlayer, reason }); });
+        }
+
         function triggerPhase2Cinematic() {
             isCinematicActive = true;
-            showNotification("تحذير! الوحش يتطور ويتشكل من جديد!");
+            showNotification("تحذير! الوحش يتطور للمرحلة الثانية وتم ضبط الوقت إلى 2:30!");
+
+            timeRemaining = 150; 
+            document.getElementById('timer-display').innerText = "الوقت: 02:30";
 
             let targetCamPos = monsterGroup.position.clone().add(new THREE.Vector3(0, 8, 18));
             let frame = 0;
@@ -697,13 +715,44 @@
                     clearInterval(animInterval);
                     isCinematicActive = false;
                     currentPhase = 2;
-                    showNotification("المرحلة الثانية بدأت! الوحش أصبح أسرع وأشرس!");
+                    showNotification("المرحلة الثانية بدأت! الوحش أصبح أسرع بكثير!");
+                }
+            }, 30);
+        }
+
+        function triggerDefeatCinematic(blamePlayer, reason) {
+            if(isGameOver) return;
+            isGameOver = true;
+            isCinematicActive = true;
+            if (timerInterval) clearInterval(timerInterval);
+
+            let frame = 0;
+            let animInterval = setInterval(() => {
+                frame++;
+                let hitPos = playerGroup.position.clone();
+                monsterGroup.position.lerp(hitPos, 0.15);
+                monsterGroup.lookAt(hitPos.x, monsterGroup.position.y, hitPos.z);
+
+                camera.position.set(hitPos.x + 5, hitPos.y + 3, hitPos.z + 5);
+                camera.lookAt(hitPos);
+
+                if (frame % 5 === 0) {
+                    playerGroup.rotation.y += 0.8;
+                    playerGroup.position.y = Math.sin(frame) * 0.5;
+                    createExplosionParticles(hitPos, 0xff0000);
+                    playSound('error');
+                }
+
+                if (frame >= 60) {
+                    clearInterval(animInterval);
+                    endGame(false, blamePlayer, reason);
                 }
             }, 30);
         }
 
         function triggerVictoryCinematic() {
             isCinematicActive = true;
+            if (timerInterval) clearInterval(timerInterval);
             showNotification("تم إكمال جميع المهام! هزيمة وحش الباك رومز!");
 
             let targetCamPos = monsterGroup.position.clone().add(new THREE.Vector3(0, 10, 22));
@@ -724,7 +773,7 @@
                     clearInterval(animInterval);
                     createExplosionParticles(monsterGroup.position, 0xffff00);
                     scene.remove(monsterGroup);
-                    endGame(true, `فوز أسطوري يا ${playerName}! قمت بإتمام الـ 25 مهمة والقضاء على الوحش!`);
+                    endGame(true, null, `فوز أسطوري يا ${playerName}! قمت بإتمام الـ 25 مهمة والقضاء على الوحش!`);
                 }
             }, 30);
         }
@@ -739,7 +788,9 @@
             
             solvedCount = 0;
             currentPhase = 1;
-            document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
+            timeRemaining = 90; // 1:30 للمرحلة الأولى
+            document.getElementById('timer-display').innerText = "الوقت: 01:30";
+            document.getElementById('tasks-tracker').innerText = `المهام: 0 / 25`;
 
             buildMonsterPhase1();
             terminals.forEach(t => {
@@ -753,6 +804,7 @@
             isGameOver = false; inQuestionMenu = false; isCinematicActive = false;
 
             initPeerServer(category);
+            startTimer();
 
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
@@ -807,7 +859,7 @@
                 broadcastTaskSolved(activeTerminal.index);
 
                 solvedCount++;
-                document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
+                document.getElementById('tasks-tracker').innerText = `المهام: ${solvedCount} / 25`;
                 showNotification(`تم إنهاء المهمة (${solvedCount}/25)!`);
 
                 if (solvedCount === 12 && currentPhase === 1) {
@@ -818,7 +870,7 @@
             } else {
                 playSound('error');
                 const dir = playerGroup.position.clone().sub(monsterGroup.position).normalize();
-                const nextPos = monsterGroup.position.clone().addScaledVector(dir, 10);
+                const nextPos = monsterGroup.position.clone().addScaledVector(dir, 18);
                 if (!checkCollision(nextPos, 2.0)) monsterGroup.position.copy(nextPos);
             }
         }
@@ -833,7 +885,7 @@
         function updateMonsterAI() {
             if (isGameOver || isCinematicActive) return;
 
-            const monsterSpeed = currentPhase === 1 ? 0.05 : 0.095;
+            const monsterSpeed = currentPhase === 1 ? 0.12 : 0.22;
             monsterGroup.lookAt(playerGroup.position.x, 0, playerGroup.position.z);
 
             const moveDir = new THREE.Vector3(0, 0, 1).applyQuaternion(monsterGroup.quaternion).normalize();
@@ -854,15 +906,21 @@
             document.getElementById('danger-bar').style.width = dangerPercentage + '%';
 
             if (distance < 3.5) {
-                playSound('error');
-                endGame(false, `للأسف يا ${playerName}، التهمك الوحش في المتاهة!`);
+                broadcastTeamFailed(playerName, "تم الإمساك به بواسطة وحش الباك رومز!");
+                triggerDefeatCinematic(playerName, "التهمك الوحش في المتاهة وسقط الفريق معه!");
             }
         }
 
-        function endGame(won, message) {
-            isGameOver = true;
-            document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "خسارة!";
+        function endGame(won, blamePlayer, message) {
+            document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "خسارة الفريق!";
             document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
+
+            if (!won && blamePlayer) {
+                document.getElementById('blame-msg').innerText = `⚠️ اللاعب المتسبب في خسارة الفريق: [ ${blamePlayer} ]`;
+            } else {
+                document.getElementById('blame-msg').innerText = "";
+            }
+
             document.getElementById('game-over-msg').innerText = message;
             document.getElementById('game-over').style.display = 'flex';
         }
@@ -902,4 +960,4 @@
         animate();
     </script>
 </body>
-</html> 
+</html>
