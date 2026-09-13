@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - ألوان مختلفة للاعبين</title>
+    <title>الهروب من الباك رومز - الوحش الفضائي وأسئلة إفريقيا</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
@@ -83,15 +83,15 @@
 
         #question-card {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; max-width: 500px; background: rgba(15, 15, 15, 0.98);
+            width: 90%; max-width: 550px; background: rgba(15, 15, 15, 0.98);
             border: 2px solid #f1c40f; border-radius: 15px; padding: 25px;
-            text-align: center; color: #fff; pointer-events: auto; display: none; z-index: 15;
+            text-align: center; color: #fff; pointer-events: auto; display: none;
         }
-        #question-text { font-size: 1.3rem; margin-bottom: 20px; color: #f1c40f; }
+        #question-text { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .option-btn {
             background: #2f3542; border: 1px solid #57606f; color: #fff;
-            padding: 12px; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: 0.2s;
+            padding: 12px; font-size: 0.95rem; border-radius: 8px; cursor: pointer;
         }
         .option-btn:hover { background: #f1c40f; color: #000; font-weight: bold; }
 
@@ -110,16 +110,17 @@
 
     <div id="main-menu">
         <h1>الهروب من الباك رومز 3D</h1>
-        <p>ألوان مختلفة لكل لاعب | اصطدام صلب بالجدران | لعب جماعي أونلاين</p>
+        <p>أسئلة قارة إفريقيا كاملة | تطوير شكل الوحش الفضائي | ألوان لاعبين مختلفة</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
-            <input type="text" id="player-name-input" placeholder="ادخل اسمك..." maxlength="12" value="اللاعب 1">
+            <input type="text" id="player-name-input" placeholder="ادخل اسمك..." maxlength="12" value="زياد">
         </div>
 
         <div class="input-group">
             <label for="category-select">اختر سيرفر المادة:</label>
             <select id="category-select">
+                <option value="africa_room">سيرفر دراسات: قارة إفريقيا</option>
                 <option value="math_room">سيرفر الرياضيات</option>
                 <option value="general_room">سيرفر معلومات عامة</option>
             </select>
@@ -190,8 +191,39 @@
             }
         }
 
-        // بنك الأسئلة: كل سؤال يحتوي على السؤال، 4 إجابات، ودليل الإجابة الصحيحة (0، 1، 2، 3)
         const questionBank = {
+            africa_room: [
+                { q: "تعد قارة إفريقيا ثاني أكبر قارات العالم مساحة بعد قارة:", options: ["أوروبا", "أمريكا الشمالية", "آسيا", "أستراليا"], correct: 2 },
+                { q: "تبلغ مساحة قارة إفريقيا حوالي كم مليون كم²؟", options: ["44.2", "30.4", "10.5", "17.8"], correct: 1 },
+                { q: "تمثل مساحة إفريقيا حوالي 20% (أي كم) من مساحة يابس الكرة الأرضية؟", options: ["الربع", "الخمس", "النصف", "الثلث"], correct: 1 },
+                { q: "تمتد قارة إفريقيا بين دائرتي عرض 37.30° شمالاً و 34.30° جنوباً، أي في أكثر من كم دائرة عرضية؟", options: ["50", "60", "70", "80"], correct: 2 },
+                { q: "يمر بوسط قارة إفريقيا تقريباً دائرة عرض رئيسية هي:", options: ["مدار السرطان", "دائرة الاستواء", "مدار الجدي", "الدائرة القطبية"], correct: 1 },
+                { q: "يمر خط الجرينتش الرئيسي في قارة إفريقيا في نصفها:", options: ["الشرقي", "الغربي", "الشمالي", "الجنوبي"], correct: 1 },
+                { q: "تقع معظم مساحة قارة إفريقيا في النصف الشمالي بينما يقع الثلث الآخر في النصف:", options: ["الشرقي", "الغربي", "الجنوبي", "القطبي"], correct: 2 },
+                { q: "يحد قارة إفريقيا من جهة الشمال البحر المتوسط الذي يفصلها عن قارة:", options: ["آسيا", "أوروبا", "أمريكا الشمالية", "أستراليا"], correct: 1 },
+                { q: "يفصل البحر الأحمر والمحيط الهندي قارة إفريقيا عن قارة:", options: ["أوروبا", "آسيا", "أمريكا الجنوبية", "أستراليا"], correct: 1 },
+                { q: "يحد قارة إفريقيا من جهة الغرب المحيط:", options: ["الهادي", "الهندي", "الأطلنطي", "القطبي الشمالي"], correct: 2 },
+                { q: "تقترب قارة إفريقيا من قارة آسيا عند مضيق:", options: ["جبل طارق", "باب المندب", "هرمز", "موزمبيق"], correct: 1 },
+                { q: "تقترب قارة إفريقيا من قارة أوروبا عند مضيق:", options: ["جبل طارق", "باب المندب", "مالقا", "البسفور"], correct: 0 },
+                { q: "تتصل قارة إفريقيا بقارة آسيا عن طريق شبه جزيرة:", options: ["العرب", "الصومال", "سيناء", "البلقان"], correct: 2 },
+                { q: "بم تفسر الأهمية الاستراتيجية لموقع إفريقيا؟ لأنها تشرف على ممرات مائية مهمة مثل:", options: ["مضيق جبل طارق وباب المندب وقناة السويس", "مضيق هرمز والبسفور", "قناة بنما ومضيق ماجلان", "مضيق ملقا ومضيق بيرنغ"], correct: 0 },
+                { q: "تتمتع إفريقيا بأهمية اقتصادية بسبب موقعها الفلكي الذي أدى إلى تنوع:", options: ["المعادن فقط", "المناخ والنبات والمحاصيل", "السكان والمباني", "اللغات والعملات"], correct: 1 },
+                { q: "نشأت على أرض إفريقيا حضارة قرطاج في دولة:", options: ["مصر", "تونس", "السودان", "المغرب"], correct: 1 },
+                { q: "نشأت حضارات قديمة في إفريقيا مثل حضارة كوش في دولة:", options: ["تونس", "إريتريا", "السودان", "الجزائر"], correct: 2 },
+                { q: "نشأت حضارة أكسوم القديمة في دولتي:", options: ["مصر وليبيا", "إريتريا وإثيوبيا", "تونس والمغرب", "الصومال وجيبوتي"], correct: 1 },
+                { q: "تعد شبه جزيرة سيناء معبراً مهما لنقل الثقافات والحضارات مثل الحضارة:", options: ["الإغريقية", "الإسلامية", "الرومانية", "الفارسية"], correct: 1 },
+                { q: "بم تفسر الأهمية الاستراتيجية لشبه جزيرة سيناء؟", options: ["بسبب تعرض مصر للحملات العسكرية منها وحماية الأمن القومي", "بسبب وجود الجبال العالية بها", "لأنها تفصل بين بحرين", "لكثرة الأمطار بها"], correct: 0 },
+                { q: "من الرحالة المصريين القدماء في عهد الأسرتين 5 و 6 الذي قام بأربع رحلات جنوباً:", options: ["الملك نخاو", "الرحالة حر-خوف", "ابن بطوطة", "المسعودي"], correct: 1 },
+                { q: "أرسل الملك الفرعوني نخاو الثاني بعثة للدوران حول إفريقيا بدأت من البحر الأحمر واستمرت كم سنوات؟", options: ["سنة واحدة", "سنتين", "3 سنوات", "5 سنوات"], correct: 2 },
+                { q: "اهتم الخديوي إسماعيل باكتشاف منابع النيل ووصل حكمة إلى جنوب:", options: ["مدار السرطان", "دائرة الاستواء", "مدار الجدي", "البحر الأحمر"], correct: 1 },
+                { q: "رحالة عربي استطاع اختراق الصحراء الكبرى من الشمال للجنوب حتى مالي:", options: ["المسعودي", "ابن بطوطة", "الإدريسي", "ابن حوقل"], correct: 1 },
+                { q: "بدأت محاولات البرتغاليين لاكتشاف إفريقيا في القرن 15 م خلال عهد الأمير:", options: ["هنري الملاح", "فاسكو دا جاما", "كولومبوس", "ماجلان"], correct: 0 },
+                { q: "أسس البرتغاليون الموانئ والمراكز التجارية على طول طريق رأس الرجاء الصالح بهدف:", options: ["تأمين الملاحة والتجارة", "البحث عن الذهب فقط", "نشر التعليم", "بناء الجسور"], correct: 0 },
+                { q: "تضم قارة إفريقيا كم دولة مختلفة المساحة؟", options: ["45 دولة", "54 دولة", "60 دولة", "30 دولة"], correct: 1 },
+                { q: "تعد أكبر دول القارة الإفريقية من حيث المساحة دولة:", options: ["مصر", "السودان", "الجزائر", "نيجيريا"], correct: 2 },
+                { q: "تضم قارة إفريقيا كم دولة عربية؟", options: ["8 دول", "10 دول", "12 دولة", "5 دول"], correct: 1 },
+                { q: "يرجع تقسيم قارة إفريقيا لعدد كبير من الدول إلى:", options: ["تسارع الدول الاستعمارية الأوروبية لنهب خيراتها", "كثرة الجبال والبحار", "رغبة السكان في التقسيم", "اتفاقيات مناخية"], correct: 0 }
+            ],
             math_room: [
                 { q: "7 × 8 = ؟", options: ["54", "56", "64", "48"], correct: 1 },
                 { q: "جذر العدد 100 هو:", options: ["8", "9", "10", "12"], correct: 2 },
@@ -215,7 +247,7 @@
         let isGameOver = false;
         let inQuestionMenu = false;
         let isCinematicActive = false;
-        let playerName = "اللاعب 1";
+        let playerName = "زياد";
         let solvedCount = 0;
         let currentPhase = 1;
 
@@ -228,8 +260,8 @@
         let remotePlayers = {};
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x111100);
-        scene.fog = new THREE.FogExp2(0x111100, 0.025);
+        scene.background = new THREE.Color(0x0a0a00);
+        scene.fog = new THREE.FogExp2(0x0a0a00, 0.022);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -243,7 +275,7 @@
         const hSize = MAP_SIZE / 2;
 
         const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4ac0d, roughness: 0.9 });
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x555522, roughness: 0.9 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x444411, roughness: 0.9 });
         
         const floor = new THREE.Mesh(new THREE.PlaneGeometry(MAP_SIZE, MAP_SIZE), floorMat);
         floor.rotation.x = -Math.PI / 2;
@@ -344,6 +376,7 @@
         const monsterGroup = new THREE.Group();
         let monsterBodyMesh;
 
+        // الطور الأول للوحش الفضائي
         function buildMonsterPhase1() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
             
@@ -359,6 +392,7 @@
             monsterGroup.add(eye1); monsterGroup.add(eye2);
         }
 
+        // الطور الثاني المتطور للوحش الفضائي مع أجنحة وأعضاء إضافية
         function buildMonsterPhase2() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
 
@@ -565,7 +599,11 @@
             peer = new Peer(myId);
 
             peer.on('open', (id) => {
-                document.getElementById('server-status').innerText = "متصل بالسيرفر: " + (category === "math_room" ? "الرياضيات" : "المعلومات العامة");
+                let serverName = "دراسات إفريقيا";
+                if(category === "math_room") serverName = "الرياضيات";
+                else if(category === "general_room") serverName = "المعلومات العامة";
+
+                document.getElementById('server-status').innerText = "متصل بالسيرفر: " + serverName;
                 
                 for (let i = 1000; i <= 9999; i += 1000) {
                     let targetId = category + "_" + i;
@@ -693,7 +731,7 @@
 
         function startGame() {
             const nameInput = document.getElementById('player-name-input').value.trim();
-            playerName = nameInput !== "" ? nameInput : "اللاعب 1";
+            playerName = nameInput !== "" ? nameInput : "زياد";
             updatePlayerNameTag(playerName);
 
             const category = document.getElementById('category-select').value;
@@ -734,20 +772,17 @@
             });
         }
 
-        // عرض السؤال و4 إجابات عند ضغط زر "حل!"
         function interactWithTerminal() {
             if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
 
             inQuestionMenu = true;
             document.getElementById('action-btn').style.display = 'none';
             
-            // اختيار السؤال المخصص للشاشة الحالية
             const qData = currentQuestions[activeTerminal.index % currentQuestions.length];
             document.getElementById('question-text').innerText = qData.q;
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
 
-            // عرض 4 خيارات للإجابة
             qData.options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
@@ -759,7 +794,6 @@
             document.getElementById('question-card').style.display = 'block';
         }
 
-        // معالجة اختيار الإجابة
         function handleAnswer(selectedIndex, correctIndex) {
             document.getElementById('question-card').style.display = 'none';
             inQuestionMenu = false;
@@ -783,7 +817,6 @@
                 }
             } else {
                 playSound('error');
-                showNotification("إجابة خاطئة! الوحش يقترب!");
                 const dir = playerGroup.position.clone().sub(monsterGroup.position).normalize();
                 const nextPos = monsterGroup.position.clone().addScaledVector(dir, 10);
                 if (!checkCollision(nextPos, 2.0)) monsterGroup.position.copy(nextPos);
@@ -869,5 +902,4 @@
         animate();
     </script>
 </body>
-</html>
-
+</html> 
