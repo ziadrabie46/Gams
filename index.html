@@ -85,13 +85,13 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 90%; max-width: 500px; background: rgba(15, 15, 15, 0.98);
             border: 2px solid #f1c40f; border-radius: 15px; padding: 25px;
-            text-align: center; color: #fff; pointer-events: auto; display: none;
+            text-align: center; color: #fff; pointer-events: auto; display: none; z-index: 15;
         }
-        #question-text { font-size: 1.3rem; margin-bottom: 20px; }
+        #question-text { font-size: 1.3rem; margin-bottom: 20px; color: #f1c40f; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .option-btn {
             background: #2f3542; border: 1px solid #57606f; color: #fff;
-            padding: 12px; font-size: 1rem; border-radius: 8px; cursor: pointer;
+            padding: 12px; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: 0.2s;
         }
         .option-btn:hover { background: #f1c40f; color: #000; font-weight: bold; }
 
@@ -190,6 +190,7 @@
             }
         }
 
+        // بنك الأسئلة: كل سؤال يحتوي على السؤال، 4 إجابات، ودليل الإجابة الصحيحة (0، 1، 2، 3)
         const questionBank = {
             math_room: [
                 { q: "7 × 8 = ؟", options: ["54", "56", "64", "48"], correct: 1 },
@@ -206,7 +207,6 @@
             ]
         };
 
-        // توليد لون عشوائي مميز لكل لاعب
         const playerColorsList = [0x00a8ff, 0x9b59b6, 0x2ecc71, 0xe67e22, 0xe84393, 0x1abc9c, 0xf1c40f];
         let myPlayerColor = playerColorsList[Math.floor(Math.random() * playerColorsList.length)];
 
@@ -288,7 +288,6 @@
             return false;
         }
 
-        // إنشاء لاعب مع لون محدد
         const playerGroup = new THREE.Group();
         const playerBodyMat = new THREE.MeshStandardMaterial({ color: myPlayerColor });
         const playerBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), playerBodyMat);
@@ -317,7 +316,6 @@
         playerGroup.position.set(0, 0, 60);
         scene.add(playerGroup);
 
-        // إنشاء لاعب آخر مع لونه الخاص
         function createRemotePlayerMesh(name, colorHex) {
             const group = new THREE.Group();
             const rBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), new THREE.MeshStandardMaterial({ color: colorHex || 0xe74c3c }));
@@ -562,7 +560,6 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        // الشبكة وإرسال بيانات اللون للآخرين
         function initPeerServer(category) {
             const myId = category + "_" + Math.floor(Math.random() * 8999 + 1000);
             peer = new Peer(myId);
@@ -737,17 +734,20 @@
             });
         }
 
+        // عرض السؤال و4 إجابات عند ضغط زر "حل!"
         function interactWithTerminal() {
             if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
 
             inQuestionMenu = true;
             document.getElementById('action-btn').style.display = 'none';
             
+            // اختيار السؤال المخصص للشاشة الحالية
             const qData = currentQuestions[activeTerminal.index % currentQuestions.length];
             document.getElementById('question-text').innerText = qData.q;
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
 
+            // عرض 4 خيارات للإجابة
             qData.options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
@@ -759,6 +759,7 @@
             document.getElementById('question-card').style.display = 'block';
         }
 
+        // معالجة اختيار الإجابة
         function handleAnswer(selectedIndex, correctIndex) {
             document.getElementById('question-card').style.display = 'none';
             inQuestionMenu = false;
@@ -782,6 +783,7 @@
                 }
             } else {
                 playSound('error');
+                showNotification("إجابة خاطئة! الوحش يقترب!");
                 const dir = playerGroup.position.clone().sub(monsterGroup.position).normalize();
                 const nextPos = monsterGroup.position.clone().addScaledVector(dir, 10);
                 if (!checkCollision(nextPos, 2.0)) monsterGroup.position.copy(nextPos);
@@ -868,3 +870,4 @@
     </script>
 </body>
 </html>
+
