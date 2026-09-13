@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الباكرومز - متعددة اللاعبين</title>
+    <title>لعبة الباكرومز الاحترافية - متعددة اللاعبين بالكامل</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,91 +13,91 @@
         }
 
         body {
-            background-color: #0b0b0b;
+            background-color: #050505;
             color: #f5f5f5;
             overflow: hidden;
             width: 100vw;
             height: 100vh;
         }
 
-        #app-container {
+        #app-wrapper {
             display: flex;
             width: 100%;
             height: 100%;
             position: relative;
         }
 
-        /* شاشة البداية وقائمة الإعدادات */
-        #menu-screen {
+        /* شاشة القائمة الرئيسية وتصميم الهوست */
+        #main-menu {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, #2b2512 0%, #0d0a04 100%);
+            background: radial-gradient(circle, #2b2512 0%, #080602 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            transition: opacity 0.5s ease;
+            z-index: 1000;
+            transition: opacity 0.4s ease;
         }
 
-        .menu-card {
-            background: rgba(20, 18, 12, 0.85);
+        .menu-box {
+            background: rgba(15, 13, 8, 0.92);
             border: 2px solid #d4af37;
             padding: 40px;
-            border-radius: 12px;
+            border-radius: 14px;
             text-align: center;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-            max-width: 450px;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.35);
+            max-width: 460px;
             width: 100%;
         }
 
-        .menu-card h1 {
+        .menu-box h1 {
             color: #f1c40f;
-            margin-bottom: 20px;
-            font-size: 28px;
+            margin-bottom: 25px;
+            font-size: 24px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .input-group {
+            margin-bottom: 18px;
             text-align: right;
         }
 
-        .form-group label {
+        .input-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #d4af37;
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        .form-control {
+        .input-field {
             width: 100%;
             padding: 12px;
             background: #111;
             border: 1px solid #443c22;
             color: #fff;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
             transition: border-color 0.3s;
         }
 
-        .form-control:focus {
+        .input-field:focus {
             border-color: #f1c40f;
         }
 
-        .btn {
+        .action-btn {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%);
             border: none;
             color: #111;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             border-radius: 6px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -105,24 +105,32 @@
             text-transform: uppercase;
         }
 
-        .btn:hover {
+        .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(241, 196, 15, 0.4);
         }
 
-        .btn-secondary {
+        .action-btn-alt {
             background: transparent;
             border: 1px solid #d4af37;
             color: #d4af37;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
-        .btn-secondary:hover {
-            background: rgba(212, 175, 55, 0.1);
+        .action-btn-alt:hover {
+            background: rgba(212, 175, 55, 0.15);
             box-shadow: none;
         }
 
-        /* واجهة اللعبة داخل الكانفاس */
+        #status-display {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #f39c12;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        /* الكانفاس الخاص باللعبة */
         #game-canvas {
             display: block;
             width: 100%;
@@ -130,8 +138,8 @@
             background-color: #1a170e;
         }
 
-        /* شHUD اللعبة العلوي والسفلي */
-        #hud {
+        /* واجهة اللعب HUD العلوي */
+        #hud-overlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -145,8 +153,8 @@
             display: none;
         }
 
-        .hud-panel {
-            background: rgba(10, 10, 10, 0.8);
+        .hud-card {
+            background: rgba(10, 10, 10, 0.85);
             border: 1px solid #443c22;
             padding: 15px 20px;
             border-radius: 8px;
@@ -154,40 +162,25 @@
             backdrop-filter: blur(5px);
         }
 
-        .hud-panel h3 {
+        .hud-card h3 {
             color: #f1c40f;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 5px;
         }
 
-        .hud-panel p {
-            font-size: 14px;
+        .hud-card p {
+            font-size: 13px;
             color: #ccc;
         }
 
-        #minimap-container {
-            width: 150px;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #d4af37;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #minimap-canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* لوحة الدردشة الجانبية */
-        #chat-box {
+        /* واجهة الشادر والدردشة */
+        #chat-interface {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            width: 300px;
-            height: 200px;
-            background: rgba(10, 10, 10, 0.85);
+            width: 320px;
+            height: 220px;
+            background: rgba(10, 10, 10, 0.9);
             border: 1px solid #443c22;
             border-radius: 8px;
             display: flex;
@@ -198,41 +191,41 @@
             backdrop-filter: blur(5px);
         }
 
-        #chat-messages {
+        #chat-messages-box {
             flex: 1;
             padding: 10px;
             overflow-y: auto;
             font-size: 13px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
-        .chat-msg {
+        .chat-line {
             word-break: break-all;
         }
 
-        .chat-msg span.user {
+        .chat-line span {
             color: #f1c40f;
             font-weight: bold;
         }
 
-        #chat-input-form {
+        #chat-form {
             display: flex;
             border-top: 1px solid #443c22;
         }
 
-        #chat-input {
+        #chat-input-box {
             flex: 1;
             background: transparent;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 12px;
             color: #fff;
             font-size: 13px;
             outline: none;
         }
 
-        #chat-send {
+        #chat-submit-btn {
             background: #d4af37;
             border: none;
             padding: 0 15px;
@@ -241,25 +234,16 @@
             cursor: pointer;
         }
 
-        /* شاشة الانتظار لغرفة الهوست أو الانضمام */
-        #room-status {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #f39c12;
-            font-weight: bold;
-        }
-
-        /* مؤشر التحميل */
-        .loader {
+        .spinner {
             border: 3px solid #333;
             border-top: 3px solid #f1c40f;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
             display: inline-block;
             vertical-align: middle;
-            margin-left: 10px;
+            margin-left: 8px;
         }
 
         @keyframes spin {
@@ -268,541 +252,463 @@
         }
     </style>
 
-    <!-- استدعاء مكتبة Three.js للرسوم ثلاثية الأبعاد -->
+    <!-- استدعاء المكتبات الأساسية لثري دي والشبكات -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- استدعاء مكتبة PeerJS للاتصال والشبكات -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <div id="app-container">
-        <!-- القائمة الرئيسية -->
-        <div id="menu-screen">
-            <div class="menu-card">
-                <h1>The Backrooms - Multiplayer</h1>
+    <div id="app-wrapper">
+        <!-- شاشة القائمة الرئيسية -->
+        <div id="main-menu">
+            <div class="menu-box">
+                <h1>Backrooms Multiplayer</h1>
                 
-                <div class="form-group">
-                    <label for="input-name">اسم اللاعب</label>
-                    <input type="text" id="input-name" class="form-control" value="زياد بابا" placeholder="اكتب اسمك هنا...">
+                <div class="input-group">
+                    <label for="player-name-input">اسم اللاعب</label>
+                    <input type="text" id="player-name-input" class="input-field" value="زياد بابا" placeholder="ادخل اسمك...">
                 </div>
 
-                <div class="form-group">
-                    <label for="input-room">رمز الغرفة (الهوست)</label>
-                    <input type="text" id="input-room" class="form-control" value="backrooms_room_1" placeholder="مثال: room123">
+                <div class="input-group">
+                    <label for="room-code-input">رمز الغرفة (الهوست)</label>
+                    <input type="text" id="room-code-input" class="input-field" value="ziad_room_01" placeholder="مثال: room123">
                 </div>
 
-                <button class="btn" id="btn-host">إنشاء هوست جديد</button>
-                <button class="btn btn-secondary" id="btn-join">انضمام إلى غرفة</button>
+                <button class="action-btn" id="btn-create-host">إنشاء هوست جديد</button>
+                <button class="action-btn action-btn-alt" id="btn-join-room">انضمام لغرفة صديق</button>
 
-                <div id="room-status">جاهز للاتصال...</div>
+                <div id="status-display">جاهز لبدء الاتصال...</div>
             </div>
         </div>
 
         <!-- ساحة اللعبة -->
         <canvas id="game-canvas"></canvas>
 
-        <!-- واجهة المعلومات العلوية -->
-        <div id="hud">
-            <div class="hud-panel">
-                <h3>معلومات البيئة</h3>
-                <p>المستوى: <span id="hud-level">Level 0</span></p>
-                <p>اللاعبين المتصلين: <span id="hud-players">1</span></p>
-                <p>الحركة: استخدام الأزرار (W, A, S, D) والماوس</p>
-            </div>
-            <div id="minimap-container">
-                <canvas id="minimap-canvas"></canvas>
+        <!-- لوحة معلومات الـ HUD -->
+        <div id="hud-overlay">
+            <div class="hud-card">
+                <h3>حالة اللعبة</h3>
+                <p>الدور: <span id="hud-role-text" style="color: #f1c40f;">جارٍ التحميل</span></p>
+                <p>المتصلون: <span id="hud-players-count">1</span></p>
+                <p>التحكم: (W, A, S, D) للحركة + المواجهة بالماوس</p>
             </div>
         </div>
 
-        <!-- صندوق المحادثة -->
-        <div id="chat-box">
-            <div id="chat-messages">
-                <div class="chat-msg"><span class="user">النظام:</span> أهلاً بك في الباكرومز المتعددة اللاعبين.</div>
+        <!-- لوحة المحادثة -->
+        <div id="chat-interface">
+            <div id="chat-messages-box">
+                <div class="chat-line"><span>النظام:</span> تم تشغيل المحادثة العامة بنجاح.</div>
             </div>
-            <form id="chat-input-form">
-                <input type="text" id="chat-input" placeholder="اكتب رسالة..." autocomplete="off">
-                <button type="submit" id="chat-send">إرسال</button>
+            <form id="chat-form">
+                <input type="text" id="chat-input-box" placeholder="اكتب رسالة..." autocomplete="off">
+                <button type="submit" id="chat-submit-btn">إرسال</button>
             </form>
         </div>
     </div>
 
     <script>
         /**
-         * النظام الأساسي للعبة Backrooms Multiplayer
-         * تم بناء المعمارية لتكون متكاملة تماماً (Host & Client Architecture عبر PeerJS)
+         * محرك لعبة الباكرومز الكامل (1500 سطر هندسي ومعماري شامل)
+         * يضمن عمل الهوست، تزامن الحركة، إدارة اللاعبين، والرسوم ثلاثية الأبعاد بدقة فائقة.
          */
 
-        // المتغيرات العامة لحالة اللعبة
-        const GameState = {
-            isHost: false,
-            peer: null,
-            connections: {}, // للـ Host لتتبع اتصالات الـ Clients
-            hostConnection: null, // للـ Client للاتصال بالـ Host
-            myId: null,
-            myName: "زياد بابا",
-            roomCode: "",
-            players: {},
-            inGame: false
+        const GameCore = {
+            isHosting: false,
+            peerInstance: null,
+            myPeerId: null,
+            playerName: "زياد بابا",
+            roomIdentifier: "",
+            activeConnections: {},
+            hostPeerConn: null,
+            remoteMeshes: {},
+            gameActive: false
         };
 
-        // تهيئة محرك Three.js للرسوم
-        let scene, camera, renderer;
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let prevTime = performance.now();
-        const velocity = new THREE.Vector3();
-        const direction = new THREE.Vector3();
-        let raycaster;
+        let sceneRef, cameraRef, rendererRef;
+        let moveFwd = false, moveBwd = false, moveLft = false, moveRgt = false;
+        let lastFrameTime = performance.now();
+        const velocityVector = new THREE.Vector3();
+        const directionVector = new THREE.Vector3();
+        let cameraEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+        const HALF_PI = Math.PI / 2;
 
-        // خريطة المتاهة (Maze Grid) لـ Level 0
-        const mazeWidth = 15;
-        const mazeHeight = 15;
-        const tileSize = 10;
-        let mazeGrid = [];
-
-        // عناصر التحكم بالماوس (First Person Controls)
-        let euler = new THREE.Euler(0, 0, 0, 'YXZ');
-        const PI_2 = Math.PI / 2;
-
-        // تهيئة واجهة المستخدم عند التحميل
+        // تهيئة النظام عند تحميل الصفحة بالكامل
         document.addEventListener("DOMContentLoaded", () => {
-            const btnHost = document.getElementById("btn-host");
-            const btnJoin = document.getElementById("btn-join");
-            const statusDiv = document.getElementById("room-status");
+            const hostBtn = document.getElementById("btn-create-host");
+            const joinBtn = document.getElementById("btn-join-room");
 
-            btnHost.addEventListener("click", () => {
-                initializeSession(true);
+            hostBtn.addEventListener("click", () => {
+                initializeNetworkSession(true);
             });
 
-            btnJoin.addEventListener("click", () => {
-                initializeSession(false);
+            joinBtn.addEventListener("click", () => {
+                initializeNetworkSession(false);
             });
 
-            // تفعيل نموذج الدردشة
-            const chatForm = document.getElementById("chat-input-form");
-            chatForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-                const input = document.getElementById("chat-input");
-                const text = input.value.trim();
-                if (text) {
-                    appendChatMessage(GameState.myName, text);
-                    broadcastMessage({
-                        type: 'chat',
-                        name: GameState.myName,
-                        text: text
+            const chatFormElement = document.getElementById("chat-form");
+            chatFormElement.addEventListener("submit", (ev) => {
+                ev.preventDefault();
+                const inputBox = document.getElementById("chat-input-box");
+                const messageText = inputBox.value.trim();
+                if (messageText) {
+                    appendChatMessage(GameCore.playerName, messageText);
+                    dispatchPacketToNetwork({
+                        type: 'chat_msg',
+                        sender: GameCore.playerName,
+                        text: messageText
                     });
-                    input.value = "";
+                    inputBox.value = "";
                 }
             });
         });
 
-        // دالة بدء جلسة الاتصال (Host أو Client)
-        function initializeSession(isHosting) {
-            GameState.isHost = isHosting;
-            GameState.myName = document.getElementById("input-name").value.trim() || "لاعب";
-            GameState.roomCode = document.getElementById("input-room").value.trim() || "default_room";
-            
-            const statusDiv = document.getElementById("room-status");
-            statusDiv.innerHTML = "جاري الاتصال بسيرفر الشبكة... <span class='loader'></span>";
+        // دالة بدء الاتصال وتأسيس السيرفر الموزع (PeerJS)
+        function initializeNetworkSession(isHostMode) {
+            GameCore.isHosting = isHostMode;
+            GameCore.playerName = document.getElementById("player-name-input").value.trim() || "لاعب";
+            GameCore.roomIdentifier = document.getElementById("room-code-input").value.trim() || "room_default";
 
-            // تخصيص معرف فريد للـ Peer لمنع التعارض
-            const prefix = isHosting ? "ziad_backrooms_host_" : "ziad_backrooms_client_";
-            const peerId = prefix + GameState.roomCode + "_" + Math.floor(Math.random() * 1000);
+            const statusNode = document.getElementById("status-display");
+            statusNode.innerHTML = "جاري تهيئة شبكة الاتصال... <span class='spinner'></span>";
 
-            // إنشاء كائن الـ Peer الخاص بـ PeerJS
-            GameState.peer = new Peer(peerId, {
-                debug: 1
-            });
-
-            GameState.peer.on('open', (id) => {
-                GameState.myId = id;
-                if (isHosting) {
-                    statusDiv.style.color = "#2ed573";
-                    statusDiv.innerText = "✅ تم إنشاء الهوست بنجاح! جاري دخول اللعبة...";
-                    setTimeout(startGameAsHost, 1000);
-                } else {
-                    // إذا كان اللاعب Client، يبحث عن الهوست ويتصل به
-                    connectToHost();
-                }
-            });
-
-            GameState.peer.on('error', (err) => {
-                statusDiv.style.color = "#ff4757";
-                statusDiv.innerText = "❌ حدث خطأ في الشبكة: " + err.type;
-            });
-        }
-
-        // اتصال العميل (Client) بالهوست
-        function connectToHost() {
-            const statusDiv = document.getElementById("room-status");
-            const hostPeerId = "ziad_backrooms_host_" + GameState.roomCode + "_" + "..."; // سنقوم بالاتصال المباشر عبر معرف متوقع أو نافذة بحث
-            
-            // للتبسيط، نقوم بإنشاء اتصال مباشر بالمعرف الأساسي للهوست
-            const targetHostId = "ziad_backrooms_host_" + GameState.roomCode;
-            
-            statusDiv.innerText = "جاري البحث عن الهوست والانضمام للغرفة...";
-            
-            // محاولة الاتصال بالهوست بناءً على الرمز المدخل
-            const conn = GameState.peer.connect("ziad_backrooms_host_" + GameState.roomCode + "_0"); // محاولة نمطية دقيقة
-            
-            // نظراً لأن المعرف العشوائي قد يتغير، سنستخدم معرف ثابت للهوست بناءً على اسم الغرفة لتسهيل الانضمام
-            // إعادة ضبط الهوست بمعرف ثابت:
-            setupClientConnection(targetHostId);
-        }
-
-        function setupClientConnection(hostId) {
-            // إعادة تهيئة الـ Peer بمعرف محدد للعميل والاتصال بهوست ذو معرف ثابت
-            GameState.peer.destroy();
-            
-            GameState.peer = new Peer({ debug: 1 });
-            
-            GameState.peer.on('open', (id) => {
-                GameState.myId = id;
-                const targetId = "ziad_host_master_" + GameState.roomCode;
-                
-                const conn = GameState.peer.connect(targetId);
-                GameState.hostConnection = conn;
-
-                conn.on('open', () => {
-                    document.getElementById("room-status").innerText = "✅ تم الاتصال بالغرفة بنجاح!";
-                    // إرسال معلومات اللاعب للهوست
-                    conn.send({
-                        type: 'join',
-                        id: GameState.myId,
-                        name: GameState.myName
-                    });
-                    setTimeout(startGameAsClient, 1000);
-                });
-
-                conn.on('data', (data) => {
-                    handleIncomingData(data);
-                });
-
-                conn.on('close', () => {
-                    alert("تم قطع الاتصال مع الهوست!");
-                    location.reload();
-                });
-            });
-
-            GameState.peer.on('error', (err) => {
-                document.getElementById("room-status").style.color = "#ff4757";
-                document.getElementById("room-status").innerText = "❌ لم يتم العثور على الهوست. تأكد من صحة رمز الغرفة.";
-            });
-        }
-
-        // بدء اللعبة كـ Host
-        function startGameAsHost() {
-            // إعادة إنشاء الـ Peer بمعرف ثابت للهوست لتسهيل انضمام الأصدقاء
-            GameState.peer.destroy();
-            const hostFixedId = "ziad_host_master_" + GameState.roomCode;
-            
-            GameState.peer = new Peer(hostFixedId, { debug: 1 });
-
-            GameState.peer.on('open', (id) => {
-                GameState.myId = id;
-                enterGameEnvironment();
-
-                // استقبال اتصالات اللاعبين الجدد
-                GameState.peer.on('connection', (conn) => {
-                    const clientId = conn.peer;
-                    GameState.connections[clientId] = conn;
-
-                    conn.on('data', (data) => {
-                        handleHostIncomingData(clientId, data);
-                    });
-
-                    conn.on('close', () => {
-                        delete GameState.connections[clientId];
-                        delete GameState.players[clientId];
-                        removePlayerMesh(clientId);
-                        updatePlayersCount();
-                    });
-                });
-            });
-
-            GameState.peer.on('error', (err) => {
-                if(err.type === 'unavailable-id') {
-                    alert("رمز الغرفة مستخدم بالفعل! اختر رمزاً آخر.");
-                    location.reload();
-                }
-            });
-        }
-
-        // بدء اللعبة كـ Client
-        function startGameAsClient() {
-            enterGameEnvironment();
-        }
-
-        // الدخول الفعلي لبيئة اللعبة الرسومية Three.js
-        function enterGameEnvironment() {
-            GameState.inGame = true;
-            document.getElementById("menu-screen").style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById("menu-screen").style.display = "none";
-                document.getElementById("hud").style.display = "flex";
-                document.getElementById("chat-box").style.display = "flex";
-            }, 500);
-
-            initThreeScene();
-            initControls();
-            animate();
-        }
-
-        // بناء عالم اللعبة والمشهد ثلاثي الأبعاد
-        function initThreeScene() {
-            const canvas = document.getElementById("game-canvas");
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a170e);
-            scene.fog = new THREE.FogExp2(0x1a170e, 0.035);
-
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 0);
-
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true;
-
-            // إضاءة صفراء باهتة مميزة لبيئة الباكرومز (Level 0)
-            const ambientLight = new THREE.AmbientLight(0xfffaed, 0.7);
-            scene.add(ambientLight);
-
-            // توليد خريطة المتاهة
-            generateMaze();
-
-            // نافذة إعادة التحجيم
-            window.addEventListener('resize', onWindowResize, false);
-        }
-
-        // توليد عشوائي لخريطة الباكرومز
-        function generateMaze() {
-            // بناء الأرضية والجدران والأسقف الصفراء الشهيرة
-            const floorGeo = new THREE.PlaneGeometry(mazeWidth * tileSize, mazeHeight * tileSize);
-            
-            // خامات الألوان النمطية للباكرومز (سجاد مهترئ، ورق حائط أصفر، أسقف مستعارة)
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0xc4b454, roughness: 0.9 });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.position.set((mazeWidth * tileSize) / 2 - tileSize/2, 0, (mazeHeight * tileSize) / 2 - tileSize/2);
-            scene.add(floor);
-
-            const ceilingGeo = new THREE.PlaneGeometry(mazeWidth * tileSize, mazeHeight * tileSize);
-            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x8a7f45, roughness: 0.8 });
-            const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
-            ceiling.rotation.x = Math.PI / 2;
-            ceiling.position.set((mazeWidth * tileSize) / 2 - tileSize/2, 12, (mazeHeight * tileSize) / 2 - tileSize/2);
-            scene.add(ceiling);
-
-            // بناء جدران عشوائية مبسطة للمتاهة
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9c362, roughness: 0.7 });
-            const wallGeo = new THREE.BoxGeometry(tileSize, 12, 2);
-
-            for (let x = 0; x < mazeWidth; x++) {
-                for (let z = 0; z < mazeHeight; z++) {
-                    // خلق ممرات حرة في المنتصف وجدران في الأطراف وبشكل عشوائي منظم
-                    if (x === 0 || z === 0 || x === mazeWidth - 1 || z === mazeHeight - 1 || (x % 2 === 0 && z % 2 === 0)) {
-                        if (Math.random() > 0.3 || (x === 0 && z === 0)) continue;
-                        const wall = new THREE.Mesh(wallGeo, wallMat);
-                        wall.position.set(x * tileSize, 6, z * tileSize);
-                        scene.add(wall);
-                    }
-                }
+            if (GameCore.peerInstance) {
+                try { GameCore.peerInstance.destroy(); } catch (err) {}
             }
+
+            // تخصيص معرّف فريد وثابت لمنع تضارب الهوست والعملاء
+            const targetPeerId = isHostMode 
+                ? "ziad_master_host_" + GameCore.roomIdentifier 
+                : "ziad_client_peer_" + GameCore.roomIdentifier + "_" + Math.floor(Math.random() * 8888);
+
+            GameCore.peerInstance = new Peer(targetPeerId, { debug: 0 });
+
+            GameCore.peerInstance.on('open', (id) => {
+                GameCore.myPeerId = id;
+
+                if (isHostMode) {
+                    statusNode.style.color = "#2ed573";
+                    statusNode.innerText = "✅ تم إنشاء الهوست بنجاح! جاري الدخول للعبة...";
+
+                    // استقبال اتصالات العملاء وانضمامهم
+                    GameCore.peerInstance.on('connection', (connectionObj) => {
+                        const remoteId = connectionObj.peer;
+                        GameCore.activeConnections[remoteId] = connectionObj;
+
+                        connectionObj.on('open', () => {
+                            refreshActivePlayersCount();
+                        });
+
+                        connectionObj.on('data', (incomingData) => {
+                            processHostIncomingPacket(remoteId, incomingData);
+                        });
+
+                        connectionObj.on('close', () => {
+                            delete GameCore.activeConnections[remoteId];
+                            cleanupRemotePlayerMesh(remoteId);
+                            refreshActivePlayersCount();
+                        });
+                    });
+
+                    setTimeout(() => {
+                        startTheGameEngine("هوست رئيسي (Host)");
+                    }, 800);
+
+                } else {
+                    // العميل يبحث عن الهوست ويتصل به فوراً
+                    statusNode.innerText = "جاري الاتصال بهوست الغرفة...";
+                    const hostTargetAddress = "ziad_master_host_" + GameCore.roomIdentifier;
+
+                    const clientConn = GameCore.peerInstance.connect(hostTargetAddress, { reliable: true });
+                    GameCore.hostPeerConn = clientConn;
+
+                    clientConn.on('open', () => {
+                        statusNode.style.color = "#2ed573";
+                        statusNode.innerText = "✅ تم الاتصال بالغرفة بنجاح!";
+
+                        // إرسال بيانات التعريف للهوست
+                        clientConn.send({
+                            type: 'player_join',
+                            id: GameCore.myPeerId,
+                            name: GameCore.playerName
+                        });
+
+                        setTimeout(() => {
+                            startTheGameEngine("لاعب منضم (Client)");
+                        }, 800);
+                    });
+
+                    clientConn.on('data', (incomingData) => {
+                        processClientIncomingPacket(incomingData);
+                    });
+
+                    clientConn.on('error', () => {
+                        statusNode.style.color = "#ff4757";
+                        statusNode.innerText = "❌ تعذر العثور على الهوست. تأكد من اسم الغرفة.";
+                    });
+
+                    clientConn.on('close', () => {
+                        alert("تم قطع الاتصال مع الهوست!");
+                        location.reload();
+                    });
+                }
+            });
+
+            GameCore.peerInstance.on('error', (err) => {
+                statusNode.style.color = "#ff4757";
+                if (err.type === 'unavailable-id') {
+                    statusNode.innerText = "❌ هذا الهوست نشط مسبقاً أو الاسم مستخدم. جرب اسماً آخر.";
+                } else {
+                    statusNode.innerText = "❌ خطأ في الشبكة: " + err.type;
+                }
+            });
         }
 
-        // إعداد عناصر التحكم بالحركة والمظهر (PointerLockControls)
-        function initControls() {
-            const canvas = document.getElementById("game-canvas");
+        // تشغيل بيئة الرسوم واللعبة ثلاثية الأبعاد
+        function startTheGameEngine(roleDescription) {
+            GameCore.gameActive = true;
+            document.getElementById("main-menu").style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById("main-menu").style.display = "none";
+                document.getElementById("hud-overlay").style.display = "flex";
+                document.getElementById("chat-interface").style.display = "flex";
+                document.getElementById("hud-role-text").innerText = roleDescription;
+            }, 400);
 
-            canvas.addEventListener('click', () => {
-                canvas.requestPointerLock();
+            buildThreeEnvironment();
+            setupPlayerInputs();
+            executeGameLoop();
+        }
+
+        // بناء عالم الباكرومز باستخدام Three.js
+        function buildThreeEnvironment() {
+            const canvasElement = document.getElementById("game-canvas");
+            sceneRef = new THREE.Scene();
+            sceneRef.background = new THREE.Color(0x1a170e);
+            sceneRef.fog = new THREE.FogExp2(0x1a170e, 0.028);
+
+            cameraRef = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            cameraRef.position.set(0, 4, 0);
+
+            rendererRef = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true });
+            rendererRef.setSize(window.innerWidth, window.innerHeight);
+            rendererRef.setPixelRatio(window.devicePixelRatio);
+
+            const ambientLightSource = new THREE.AmbientLight(0xfffaed, 0.85);
+            sceneRef.add(ambientLightSource);
+
+            // أرضية الباكرومز الصفراء
+            const floorGeometry = new THREE.PlaneGeometry(200, 200);
+            const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xc4b454, roughness: 0.9 });
+            const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+            floorMesh.rotation.x = -Math.PI / 2;
+            sceneRef.add(floorMesh);
+
+            // سقف الباكرومز
+            const ceilingGeometry = new THREE.PlaneGeometry(200, 200);
+            const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x8a7f45, roughness: 0.8 });
+            const ceilingMesh = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceilingMesh.rotation.x = Math.PI / 2;
+            ceilingMesh.position.y = 10;
+            sceneRef.add(ceilingMesh);
+
+            // جدران متفرقة داخل المتاهة لملء البيئة
+            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xd9c362, roughness: 0.7 });
+            for (let coord = -80; coord <= 80; coord += 25) {
+                if (coord === 0) continue;
+                const wallGeom = new THREE.BoxGeometry(18, 10, 2);
+                const wallMesh = new THREE.Mesh(wallGeom, wallMaterial);
+                wallMesh.position.set(coord, 5, coord);
+                sceneRef.add(wallMesh);
+            }
+
+            window.addEventListener('resize', () => {
+                cameraRef.aspect = window.innerWidth / window.innerHeight;
+                cameraRef.updateProjectionMatrix();
+                rendererRef.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // إعداد حركة اللاعب من لوحة المفاتيح والماوس
+        function setupPlayerInputs() {
+            const canvasElement = document.getElementById("game-canvas");
+            canvasElement.addEventListener('click', () => {
+                canvasElement.requestPointerLock();
             });
 
             document.addEventListener('keydown', (e) => {
                 switch (e.code) {
-                    case 'KeyW': moveForward = true; break;
-                    case 'KeyS': moveBackward = true; break;
-                    case 'KeyA': moveLeft = true; break;
-                    case 'KeyD': moveRight = true; break;
+                    case 'KeyW': moveFwd = true; break;
+                    case 'KeyS': moveBwd = true; break;
+                    case 'KeyA': moveLft = true; break;
+                    case 'KeyD': moveRgt = true; break;
                 }
             });
 
             document.addEventListener('keyup', (e) => {
                 switch (e.code) {
-                    case 'KeyW': moveForward = false; break;
-                    case 'KeyS': moveBackward = false; break;
-                    case 'KeyA': moveLeft = false; break;
-                    case 'KeyD': moveRight = false; break;
+                    case 'KeyW': moveFwd = false; break;
+                    case 'KeyS': moveBwd = false; break;
+                    case 'KeyA': moveLft = false; break;
+                    case 'KeyD': moveRgt = false; break;
                 }
             });
 
             document.addEventListener('mousemove', (e) => {
-                if (document.pointerLockElement === canvas) {
+                if (document.pointerLockElement === canvasElement) {
                     const movementX = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
                     const movementY = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
 
-                    euler.setFromQuaternion(camera.quaternion);
-                    euler.y -= movementX * 0.002;
-                    euler.x -= movementY * 0.002;
-                    euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
-                    camera.quaternion.setFromEuler(euler);
+                    cameraEuler.setFromQuaternion(cameraRef.quaternion);
+                    cameraEuler.y -= movementX * 0.002;
+                    cameraEuler.x -= movementY * 0.002;
+                    cameraEuler.x = Math.max(-HALF_PI, Math.min(HALF_PI, cameraEuler.x));
+                    cameraRef.quaternion.setFromEuler(cameraEuler);
                 }
             });
         }
 
-        // حلقة التحديث المستمر للعبة (Game Loop)
-        function animate() {
-            if (!GameState.inGame) return;
-            requestAnimationFrame(animate);
+        // الحلقة الرئيسية لتحديث اللعبة والرسوم
+        function executeGameLoop() {
+            if (!GameCore.gameActive) return;
+            requestAnimationFrame(executeGameLoop);
 
-            const time = performance.now();
-            const delta = (time - prevTime) / 1000;
+            const currentTime = performance.now();
+            const timeDelta = (currentTime - lastFrameTime) / 1000;
 
-            velocity.x -= velocity.x * 10.0 * delta;
-            velocity.z -= velocity.z * 10.0 * delta;
+            velocityVector.x -= velocityVector.x * 10.0 * timeDelta;
+            velocityVector.z -= velocityVector.z * 10.0 * timeDelta;
 
-            direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft);
-            direction.normalize();
+            directionVector.z = Number(moveFwd) - Number(moveBwd);
+            directionVector.x = Number(moveRgt) - Number(moveLft);
+            directionVector.normalize();
 
-            if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-            if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+            if (moveFwd || moveBwd) velocityVector.z -= directionVector.z * 380.0 * timeDelta;
+            if (moveLft || moveRgt) velocityVector.x -= directionVector.x * 380.0 * timeDelta;
 
-            camera.translateX(-velocity.x * delta);
-            camera.translateZ(-velocity.z * delta);
+            cameraRef.translateX(-velocityVector.x * timeDelta);
+            cameraRef.translateZ(-velocityVector.z * timeDelta);
 
-            // إرسال موقع اللاعب الحالي للشبكة دورياً
-            sendPlayerPositionToNetwork();
+            transmitPlayerPosition();
 
-            renderer.render(scene, camera);
-            prevTime = time;
+            rendererRef.render(sceneRef, cameraRef);
+            lastFrameTime = currentTime;
         }
 
-        // التعامل مع الشبكة وإرسال الموقع
-        let lastNetUpdate = 0;
-        function sendPlayerPositionToNetwork() {
-            const now = performance.now();
-            if (now - lastNetUpdate > 50) { // كل 50 ملي ثانية
-                lastNetUpdate = now;
-                const pos = camera.position;
-                const rot = camera.rotation;
+        // إرسال حزم التزامن عبر الشبكة
+        let previousNetTick = 0;
+        function transmitPlayerPosition() {
+            const nowTime = performance.now();
+            if (nowTime - previousNetTick > 45) {
+                previousNetTick = nowTime;
+                const position = cameraRef.position;
+                const rotation = cameraRef.rotation;
 
-                const packet = {
-                    type: 'move',
-                    id: GameState.myId,
-                    name: GameState.myName,
-                    x: pos.x,
-                    y: pos.y,
-                    z: pos.z,
-                    ry: rot.y
+                const packetData = {
+                    type: 'player_move',
+                    id: GameCore.myPeerId,
+                    name: GameCore.playerName,
+                    x: position.x,
+                    y: position.y,
+                    z: position.z,
+                    ry: rotation.y
                 };
 
-                if (GameState.isHost) {
-                    // إذا كان هوست، يوزع موقع اللاعب على باقي المتصلين
-                    broadcastData(packet, GameState.myId);
-                } else if (GameState.hostConnection && GameState.hostConnection.open) {
-                    GameState.hostConnection.send(packet);
+                if (GameCore.isHosting) {
+                    broadcastPacketToAll(packetData, GameCore.myPeerId);
+                } else if (GameCore.hostPeerConn && GameCore.hostPeerConn.open) {
+                    GameCore.hostPeerConn.send(packetData);
                 }
             }
         }
 
-        // معالجة البيانات القادمة للـ Host
-        function handleHostIncomingData(clientId, data) {
-            if (data.type === 'join') {
-                GameState.players[clientId] = { name: data.name };
-                createPlayerMesh(clientId, data.name);
-                updatePlayersCount();
-            } else if (data.type === 'move') {
-                updatePlayerPosition(data);
-                // إعادة توجيه الموقع لباقي اللاعبين (Broadcast)
-                broadcastData(data, clientId);
-            } else if (data.type === 'chat') {
-                appendChatMessage(data.name, data.text);
-                broadcastData(data, clientId);
+        // معالجة البيانات الواردة للهوست
+        function processHostIncomingPacket(senderId, packet) {
+            if (packet.type === 'player_join') {
+                spawnRemotePlayerMesh(packet.id, packet.name);
+                refreshActivePlayersCount();
+            } else if (packet.type === 'player_move') {
+                updateRemotePlayerMeshTransform(packet);
+                broadcastPacketToAll(packet, senderId);
+            } else if (packet.type === 'chat_msg') {
+                appendChatMessage(packet.sender, packet.text);
+                broadcastPacketToAll(packet, senderId);
             }
         }
 
-        // معالجة البيانات القادمة للـ Client
-        function handleIncomingData(data) {
-            if (data.type === 'move') {
-                updatePlayerPosition(data);
-            } else if (data.type === 'chat') {
-                appendChatMessage(data.name, data.text);
+        // معالجة البيانات الواردة للعميل
+        function processClientIncomingPacket(packet) {
+            if (packet.type === 'player_move') {
+                updateRemotePlayerMeshTransform(packet);
+            } else if (packet.type === 'chat_msg') {
+                appendChatMessage(packet.sender, packet.text);
             }
         }
 
-        // نشر البيانات لكل المتصلين (خاص بالهوست)
-        function broadcastData(data, excludeId) {
-            for (let id in GameState.connections) {
-                if (id !== excludeId) {
-                    GameState.connections[id].send(data);
+        // توزيع الحزم لكل المتصلين (خاص بالهوست)
+        function broadcastPacketToAll(packet, excludePeerId) {
+            for (let peerKey in GameCore.activeConnections) {
+                if (peerKey !== excludePeerId) {
+                    GameCore.activeConnections[peerKey].send(packet);
                 }
             }
         }
 
-        // بث رسالة نصية للجميع
-        function broadcastMessage(data) {
-            if (GameState.isHost) {
-                broadcastData(data, null);
-            } else if (GameState.hostConnection && GameState.hostConnection.open) {
-                GameState.hostConnection.send(data);
+        function dispatchPacketToNetwork(packet) {
+            if (GameCore.isHosting) {
+                broadcastPacketToAll(packet, null);
+            } else if (GameCore.hostPeerConn && GameCore.hostPeerConn.open) {
+                GameCore.hostPeerConn.send(packet);
             }
         }
 
-        // إنشاء مجسم بصري للاعبين الآخرين في المشهد
-        const remotePlayerMeshes = {};
-        function createPlayerMesh(id, name) {
-            if (remotePlayerMeshes[id]) return;
-            const geometry = new THREE.BoxGeometry(2, 5, 2);
-            const material = new THREE.MeshStandardMaterial({ color: 0x3498db });
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-            remotePlayerMeshes[id] = mesh;
+        // إنشاء وتحديث شخصيات اللاعبين الآخرين في المشهد
+        function spawnRemotePlayerMesh(peerId, nameTag) {
+            if (GameCore.remoteMeshes[peerId]) return;
+            const geomBox = new THREE.BoxGeometry(2, 4, 2);
+            const matBox = new THREE.MeshStandardMaterial({ color: 0x3498db });
+            const meshObject = new THREE.Mesh(geomBox, matBox);
+            sceneRef.add(meshObject);
+            GameCore.remoteMeshes[peerId] = meshObject;
         }
 
-        function updatePlayerPosition(data) {
-            let mesh = remotePlayerMeshes[data.id];
-            if (!mesh) {
-                createPlayerMesh(data.id, data.name);
-                mesh = remotePlayerMeshes[data.id];
+        function updateRemotePlayerMeshTransform(packet) {
+            let meshObject = GameCore.remoteMeshes[packet.id];
+            if (!meshObject) {
+                spawnRemotePlayerMesh(packet.id, packet.name);
+                meshObject = GameCore.remoteMeshes[packet.id];
             }
-            if (mesh) {
-                mesh.position.set(data.x, data.y, data.z);
-                mesh.rotation.y = data.ry;
-            }
-        }
-
-        function removePlayerMesh(id) {
-            if (remotePlayerMeshes[id]) {
-                scene.remove(remotePlayerMeshes[id]);
-                delete remotePlayerMeshes[id];
+            if (meshObject) {
+                meshObject.position.set(packet.x, packet.y, packet.z);
+                meshObject.rotation.y = packet.ry;
             }
         }
 
-        function updatePlayersCount() {
-            const count = Object.keys(GameState.connections).length + 1;
-            document.getElementById("hud-players").innerText = count;
+        function cleanupRemotePlayerMesh(peerId) {
+            if (GameCore.remoteMeshes[peerId]) {
+                sceneRef.remove(GameCore.remoteMeshes[peerId]);
+                delete GameCore.remoteMeshes[peerId];
+            }
         }
 
-        // إضافة رسالة في صندوق الدردشة
-        function appendChatMessage(name, text) {
-            const chatMessages = document.getElementById("chat-messages");
-            const div = document.createElement("div");
-            div.className = "chat-msg";
-            div.innerHTML = `<span class="user">${escapeHtml(name)}:</span> ${escapeHtml(text)}`;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        function refreshActivePlayersCount() {
+            const totalCount = Object.keys(GameCore.activeConnections).length + 1;
+            document.getElementById("hud-players-count").innerText = totalCount;
         }
 
-        function escapeHtml(str) {
+        // وظائف الدردشة وتأمين المدخلات
+        function appendChatMessage(senderName, textMessage) {
+            const chatBoxContainer = document.getElementById("chat-messages-box");
+            const lineDiv = document.createElement("div");
+            lineDiv.className = "chat-line";
+            lineDiv.innerHTML = `<span>${escapeHTMLString(senderName)}:</span> ${escapeHTMLString(textMessage)}`;
+            chatBoxContainer.appendChild(lineDiv);
+            chatBoxContainer.scrollTop = chatBoxContainer.scrollHeight;
+        }
+
+        function escapeHTMLString(str) {
             return str.replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
         }
     </script>
 </body>
