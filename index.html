@@ -2,847 +2,808 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>الهروب من الباك رومز - النسخة الاحترافية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الباكرومز - متعددة اللاعبين</title>
     <style>
-        /* ==================== CSS (UI & Styling) ==================== */
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #050505; touch-action: none; }
-        
-        /* Main Menu */
-        #main-menu {
-            position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .menu-box {
-            background: rgba(20, 20, 20, 0.95); padding: 40px; border-radius: 20px;
-            border: 2px solid #f1c40f; box-shadow: 0 0 40px rgba(241, 196, 15, 0.2);
-            text-align: center; width: 90%; max-width: 500px;
+
+        body {
+            background-color: #0b0b0b;
+            color: #f5f5f5;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
         }
-        .menu-box h1 { color: #f1c40f; font-size: 2.8rem; margin-bottom: 5px; text-shadow: 0 0 10px #f1c40f; font-weight: 900; }
-        .menu-box p { color: #888; margin-bottom: 25px; font-size: 1.1rem; }
-        .input-group { margin-bottom: 20px; text-align: right; }
-        .input-group label { display: block; color: #ccc; margin-bottom: 8px; font-weight: bold; }
-        .custom-input, select {
-            width: 100%; padding: 12px 15px; background: #111; border: 1px solid #444;
-            color: #fff; border-radius: 8px; font-size: 1.1rem; outline: none; transition: 0.3s;
+
+        #app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
-        .custom-input:focus, select:focus { border-color: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
-        .btn-row { display: flex; gap: 15px; margin-top: 30px; }
+
+        /* شاشة البداية وقائمة الإعدادات */
+        #menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #2b2512 0%, #0d0a04 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        .menu-card {
+            background: rgba(20, 18, 12, 0.85);
+            border: 2px solid #d4af37;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .menu-card h1 {
+            color: #f1c40f;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4af37;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: #111;
+            border: 1px solid #443c22;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #f1c40f;
+        }
+
         .btn {
-            flex: 1; padding: 15px; border: none; border-radius: 8px; font-size: 1.2rem;
-            font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%);
+            border: none;
+            color: #111;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+            text-transform: uppercase;
         }
-        .btn-host { background: #2ecc71; color: #000; box-shadow: 0 5px 0 #27ae60; }
-        .btn-host:active { transform: translateY(5px); box-shadow: none; }
-        .btn-join { background: #f39c12; color: #000; box-shadow: 0 5px 0 #d35400; }
-        .btn-join:active { transform: translateY(5px); box-shadow: none; }
 
-        /* HUD & In-Game UI */
-        #game-ui { display: none; position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
-        #top-hud { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; width: 90%; max-width: 600px; }
-        .hud-panel { background: rgba(0,0,0,0.8); border: 2px solid #fff; padding: 10px 20px; border-radius: 15px; flex: 1; text-align: center; color: #fff; font-weight: bold; font-size: 1.2rem; }
-        #task-panel { border-color: #3498db; color: #3498db; }
-        #timer-panel { border-color: #e74c3c; color: #e74c3c; }
-        
-        #danger-meter { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(0,0,0,0.8); border: 2px solid #e74c3c; border-radius: 10px; padding: 5px; }
-        #danger-fill { height: 15px; background: linear-gradient(90deg, #f1c40f, #e74c3c); width: 0%; border-radius: 5px; transition: width 0.3s; }
-        
-        /* Minimap */
-        #minimap-container { position: absolute; top: 20px; right: 20px; width: 150px; height: 150px; background: rgba(0,0,0,0.7); border: 2px solid #f1c40f; border-radius: 50%; overflow: hidden; }
-        #minimap { width: 100%; height: 100%; }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.4);
+        }
 
-        /* Chat System */
-        #chat-box { position: absolute; bottom: 120px; left: 20px; width: 300px; height: 200px; background: rgba(0,0,0,0.5); border-radius: 10px; display: flex; flex-direction: column; pointer-events: auto; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 10px; color: #fff; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px; }
-        .msg { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; }
-        .msg span { font-weight: bold; color: #f1c40f; }
-        #chat-input-container { display: flex; }
-        #chat-input { flex: 1; padding: 8px; background: rgba(0,0,0,0.8); border: 1px solid #444; color: #fff; outline: none; border-bottom-right-radius: 10px; border-bottom-left-radius: 0; }
-        #chat-send { padding: 8px 15px; background: #f1c40f; border: none; font-weight: bold; cursor: pointer; border-bottom-left-radius: 10px; }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            margin-top: 15px;
+        }
 
-        /* Controls */
-        #joystick-left, #joystick-right { position: absolute; bottom: 30px; width: 130px; height: 130px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; touch-action: none; display: none; }
-        #joystick-left { left: 30px; } #joystick-right { right: 30px; }
-        .knob { width: 60px; height: 60px; background: rgba(241, 196, 15, 0.8); border-radius: 50%; position: absolute; top: 35px; left: 35px; pointer-events: none; }
-        
-        #interact-btn { position: absolute; bottom: 180px; right: 40px; width: 90px; height: 90px; background: #2ecc71; border: 4px solid #fff; border-radius: 50%; color: #000; font-weight: 900; font-size: 1.5rem; display: none; justify-content: center; align-items: center; cursor: pointer; pointer-events: auto; box-shadow: 0 0 20px #2ecc71; }
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: none;
+        }
 
-        /* Question Modal */
-        #question-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; pointer-events: auto; z-index: 60; }
-        .q-box { background: #111; border: 2px solid #3498db; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; text-align: center; }
-        #q-text { color: #fff; font-size: 1.5rem; margin-bottom: 25px; line-height: 1.6; }
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .opt-btn { background: #222; color: #fff; border: 1px solid #555; padding: 15px; font-size: 1.1rem; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-        .opt-btn:hover { background: #3498db; border-color: #fff; }
+        /* واجهة اللعبة داخل الكانفاس */
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #1a170e;
+        }
 
-        /* Status & Overlays */
-        #network-status { position: absolute; top: 10px; left: 10px; color: #fff; font-size: 0.9rem; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: rgba(255,255,255,0.5); border-radius: 50%; pointer-events: none; display: none; }
-        #damage-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(231, 76, 60, 0.4) 100%); opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 40; }
+        /* شHUD اللعبة العلوي والسفلي */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+
+        .hud-panel {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #443c22;
+            padding: 15px 20px;
+            border-radius: 8px;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .hud-panel h3 {
+            color: #f1c40f;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .hud-panel p {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        #minimap-container {
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* لوحة الدردشة الجانبية */
+        #chat-box {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 300px;
+            height: 200px;
+            background: rgba(10, 10, 10, 0.85);
+            border: 1px solid #443c22;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 10;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+
+        #chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .chat-msg {
+            word-break: break-all;
+        }
+
+        .chat-msg span.user {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        #chat-input-form {
+            display: flex;
+            border-top: 1px solid #443c22;
+        }
+
+        #chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        #chat-send {
+            background: #d4af37;
+            border: none;
+            padding: 0 15px;
+            color: #111;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* شاشة الانتظار لغرفة الهوست أو الانضمام */
+        #room-status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        /* مؤشر التحميل */
+        .loader {
+            border: 3px solid #333;
+            border-top: 3px solid #f1c40f;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
-    <!-- Three.js for 3D Graphics -->
+
+    <!-- استدعاء مكتبة Three.js للرسوم ثلاثية الأبعاد -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- PeerJS for Multiplayer Networking -->
+    <!-- استدعاء مكتبة PeerJS للاتصال والشبكات -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-    <!-- Main Menu -->
-    <div id="main-menu">
-        <div class="menu-box">
-            <h1>الباك رومز</h1>
-            <p>النسخة الاحترافية - Multiplayer</p>
-            
-            <div class="input-group">
-                <label>اسم اللاعب</label>
-                <input type="text" id="p-name" class="custom-input" value="زياد" placeholder="اكتب اسمك...">
-            </div>
-            <div class="input-group">
-                <label>كود الغرفة (للمالتي بلاير)</label>
-                <input type="text" id="r-code" class="custom-input" value="1234" placeholder="مثال: 1234">
-            </div>
-            <div class="input-group">
-                <label>المادة الدراسية</label>
-                <select id="q-category">
-                    <option value="math">رياضيات - مستوى متقدم</option>
-                    <option value="geography">دراسات - جغرافيا</option>
-                    <option value="history">دراسات - تاريخ</option>
-                </select>
-            </div>
-            
-            <div class="btn-row">
-                <button class="btn btn-host" onclick="initGame('host')">إنشاء كـ Host</button>
-                <button class="btn btn-join" onclick="initGame('join')">دخول كـ Join</button>
-            </div>
-        </div>
-    </div>
+    <div id="app-container">
+        <!-- القائمة الرئيسية -->
+        <div id="menu-screen">
+            <div class="menu-card">
+                <h1>The Backrooms - Multiplayer</h1>
+                
+                <div class="form-group">
+                    <label for="input-name">اسم اللاعب</label>
+                    <input type="text" id="input-name" class="form-control" value="زياد بابا" placeholder="اكتب اسمك هنا...">
+                </div>
 
-    <!-- Game UI -->
-    <div id="game-ui">
-        <div id="network-status">غير متصل</div>
-        <div id="minimap-container"><canvas id="minimap" width="150" height="150"></canvas></div>
-        
-        <div id="top-hud">
-            <div id="task-panel" class="hud-panel">المهام: 0 / 10</div>
-            <div id="timer-panel" class="hud-panel">الوقت: 03:00</div>
+                <div class="form-group">
+                    <label for="input-room">رمز الغرفة (الهوست)</label>
+                    <input type="text" id="input-room" class="form-control" value="backrooms_room_1" placeholder="مثال: room123">
+                </div>
+
+                <button class="btn" id="btn-host">إنشاء هوست جديد</button>
+                <button class="btn btn-secondary" id="btn-join">انضمام إلى غرفة</button>
+
+                <div id="room-status">جاهز للاتصال...</div>
+            </div>
         </div>
-        
-        <div id="danger-meter"><div id="danger-fill"></div></div>
-        
+
+        <!-- ساحة اللعبة -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- واجهة المعلومات العلوية -->
+        <div id="hud">
+            <div class="hud-panel">
+                <h3>معلومات البيئة</h3>
+                <p>المستوى: <span id="hud-level">Level 0</span></p>
+                <p>اللاعبين المتصلين: <span id="hud-players">1</span></p>
+                <p>الحركة: استخدام الأزرار (W, A, S, D) والماوس</p>
+            </div>
+            <div id="minimap-container">
+                <canvas id="minimap-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- صندوق المحادثة -->
         <div id="chat-box">
-            <div id="chat-messages"></div>
-            <div id="chat-input-container">
-                <input type="text" id="chat-input" placeholder="اكتب رسالة...">
-                <button id="chat-send" onclick="sendChat()">إرسال</button>
+            <div id="chat-messages">
+                <div class="chat-msg"><span class="user">النظام:</span> أهلاً بك في الباكرومز المتعددة اللاعبين.</div>
             </div>
-        </div>
-
-        <!-- Mobile Controls -->
-        <div id="joystick-left"><div class="knob" id="knob-left"></div></div>
-        <div id="joystick-right"><div class="knob" id="knob-right"></div></div>
-        <div id="interact-btn" onclick="openTerminal()">حل!</div>
-        <div id="crosshair"></div>
-        <div id="damage-overlay"></div>
-    </div>
-
-    <!-- Question Modal -->
-    <div id="question-modal">
-        <div class="q-box">
-            <div id="q-text">جاري تحميل السؤال...</div>
-            <div class="options-grid" id="q-options"></div>
+            <form id="chat-input-form">
+                <input type="text" id="chat-input" placeholder="اكتب رسالة..." autocomplete="off">
+                <button type="submit" id="chat-send">إرسال</button>
+            </form>
         </div>
     </div>
 
     <script>
         /**
-         * ========================================================
-         * 1. GAME DATA & CONFIGURATION
-         * ========================================================
+         * النظام الأساسي للعبة Backrooms Multiplayer
+         * تم بناء المعمارية لتكون متكاملة تماماً (Host & Client Architecture عبر PeerJS)
          */
-        const Config = {
-            mapWidth: 21, // Must be odd number for Maze Gen
-            mapHeight: 21,
-            cellSize: 10,
-            wallHeight: 12,
-            totalTasks: 10,
-            gameTime: 180, // seconds
-            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+        // المتغيرات العامة لحالة اللعبة
+        const GameState = {
+            isHost: false,
+            peer: null,
+            connections: {}, // للـ Host لتتبع اتصالات الـ Clients
+            hostConnection: null, // للـ Client للاتصال بالـ Host
+            myId: null,
+            myName: "زياد بابا",
+            roomCode: "",
+            players: {},
+            inGame: false
         };
 
-        const QuestionBank = {
-            math: [
-                { q: "ما هو ناتج 12 × 12؟", options: ["144", "124", "164", "134"], correct: 0 },
-                { q: "ما هي قيمة 5 تكعيب (5³)؟", options: ["125", "25", "150", "75"], correct: 0 },
-                { q: "جذر 81 يساوي؟", options: ["8", "9", "7", "11"], correct: 1 }
-            ],
-            geography: [
-                { q: "أكبر قارات العالم مساحة هي؟", options: ["أفريقيا", "أوروبا", "آسيا", "أمريكا الشمالية"], correct: 2 },
-                { q: "يمر بوسط إفريقيا دائرة عرض تسمى؟", options: ["مدار السرطان", "دائرة الاستواء", "مدار الجدي", "جرينتش"], correct: 1 }
-            ],
-            history: [
-                { q: "من بنى الهرم الأكبر؟", options: ["خفرع", "منكاورع", "خوفو", "زوسر"], correct: 2 }
-            ]
-        };
+        // تهيئة محرك Three.js للرسوم
+        let scene, camera, renderer;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let prevTime = performance.now();
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let raycaster;
 
-        let GameState = {
-            mode: null, roomCode: "", playerName: "",
-            questions: [], tasksSolved: 0, timeRemaining: Config.gameTime,
-            isGameOver: false, inMenu: true, inQuestion: false,
-            terminals: [], mazeGrid: []
-        };
+        // خريطة المتاهة (Maze Grid) لـ Level 0
+        const mazeWidth = 15;
+        const mazeHeight = 15;
+        const tileSize = 10;
+        let mazeGrid = [];
 
-        let myPlayerId = Math.random().toString(36).substr(2, 9);
-        let myColor = Math.random() * 0xffffff;
+        // عناصر التحكم بالماوس (First Person Controls)
+        let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        const PI_2 = Math.PI / 2;
 
-        /**
-         * ========================================================
-         * 2. AUDIO ENGINE (Procedural Sound via AudioContext)
-         * ========================================================
-         */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const SoundEngine = {
-            playTone: (freq, type, duration, vol=0.1) => {
-                if(audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + duration);
-            },
-            success: () => { SoundEngine.playTone(600, 'sine', 0.1); setTimeout(()=>SoundEngine.playTone(800, 'sine', 0.3), 100); },
-            error: () => { SoundEngine.playTone(150, 'sawtooth', 0.4, 0.3); },
-            footstep: () => { SoundEngine.playTone(Math.random()*20 + 80, 'noise', 0.1, 0.05); } // Dummy noise
-        };
+        // تهيئة واجهة المستخدم عند التحميل
+        document.addEventListener("DOMContentLoaded", () => {
+            const btnHost = document.getElementById("btn-host");
+            const btnJoin = document.getElementById("btn-join");
+            const statusDiv = document.getElementById("room-status");
 
-        /**
-         * ========================================================
-         * 3. THREE.JS ENGINE & RENDERING
-         * ========================================================
-         */
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a05);
-        scene.fog = new THREE.FogExp2(0x0a0a05, 0.03);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-        scene.add(ambientLight);
-        const playerLight = new THREE.PointLight(0xffaa55, 1, 40);
-        scene.add(playerLight);
-
-        // Materials (Optimized)
-        const texLoader = new THREE.TextureLoader();
-        // Fallback procedural materials if no textures
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x8B8000, roughness: 0.9, metalness: 0.1 });
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x222211, roughness: 1 });
-        const ceilMat = new THREE.MeshStandardMaterial({ color: 0x050505 });
-        
-        const wallsGroup = new THREE.Group();
-        scene.add(wallsGroup);
-        const colliders = [];
-
-        // Players & Entities
-        const playersMap = {}; // ID -> THREE.Group
-        let monsterMesh = null;
-        let monsterPos = new THREE.Vector3(0, 0, 0);
-
-        /**
-         * ========================================================
-         * 4. PROCEDURAL MAZE GENERATOR (Depth-First Search)
-         * ========================================================
-         */
-        function generateMazeGrid(w, h) {
-            let grid = Array(h).fill().map(() => Array(w).fill(1)); // 1 = wall, 0 = path
-            
-            function carve(x, y) {
-                const dirs = [[0,-2],[0,2],[-2,0],[2,0]].sort(() => Math.random() - 0.5);
-                grid[y][x] = 0;
-                for (let [dx, dy] of dirs) {
-                    let nx = x + dx, ny = y + dy;
-                    if (nx > 0 && nx < w-1 && ny > 0 && ny < h-1 && grid[ny][nx] === 1) {
-                        grid[y + dy/2][x + dx/2] = 0;
-                        carve(nx, ny);
-                    }
-                }
-            }
-            carve(1, 1);
-            // Randomly remove some walls to create loops
-            for(let i=0; i<w*h/10; i++) {
-                let rx = Math.floor(Math.random()*(w-2))+1;
-                let ry = Math.floor(Math.random()*(h-2))+1;
-                grid[ry][rx] = 0;
-            }
-            return grid;
-        }
-
-        function build3DMaze(grid) {
-            GameState.mazeGrid = grid;
-            
-            // Floor & Ceiling
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(Config.mapWidth*Config.cellSize, Config.mapHeight*Config.cellSize), floorMat);
-            ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
-            scene.add(ground);
-            
-            const ceil = new THREE.Mesh(new THREE.PlaneGeometry(Config.mapWidth*Config.cellSize, Config.mapHeight*Config.cellSize), ceilMat);
-            ceil.rotation.x = Math.PI / 2; ceil.position.y = Config.wallHeight;
-            scene.add(ceil);
-
-            const wallGeo = new THREE.BoxGeometry(Config.cellSize, Config.wallHeight, Config.cellSize);
-            
-            let emptySpots = [];
-            for(let z=0; z<Config.mapHeight; z++) {
-                for(let x=0; x<Config.mapWidth; x++) {
-                    let px = (x - Config.mapWidth/2) * Config.cellSize;
-                    let pz = (z - Config.mapHeight/2) * Config.cellSize;
-                    
-                    if(grid[z][x] === 1) {
-                        let wall = new THREE.Mesh(wallGeo, wallMat);
-                        wall.position.set(px, Config.wallHeight/2, pz);
-                        wall.castShadow = true; wall.receiveShadow = true;
-                        wallsGroup.add(wall);
-                        colliders.push(new THREE.Box3().setFromObject(wall));
-                    } else {
-                        emptySpots.push({x: px, z: pz});
-                    }
-                }
-            }
-
-            // Spawn Terminals
-            emptySpots = emptySpots.sort(() => Math.random() - 0.5);
-            for(let i=0; i<Config.totalTasks; i++) {
-                let spot = emptySpots[i+5]; // offset to avoid spawn point
-                createTerminal(spot.x, spot.z, i);
-            }
-
-            // Set Initial Player Pos
-            camera.position.set(emptySpots[1].x, 5, emptySpots[1].z);
-            
-            // Create Monster (Host spawns it far away)
-            let mSpot = emptySpots[emptySpots.length-1];
-            monsterPos.set(mSpot.x, 6, mSpot.z);
-            createMonster();
-        }
-
-        function createTerminal(x, z, id) {
-            const grp = new THREE.Group();
-            const base = new THREE.Mesh(new THREE.BoxGeometry(3, 5, 3), new THREE.MeshStandardMaterial({color:0x222222}));
-            base.position.y = 2.5; grp.add(base);
-            const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2), new THREE.MeshBasicMaterial({color:0x3498db}));
-            screen.position.set(0, 3.5, 1.55); grp.add(screen);
-            grp.position.set(x, 0, z);
-            scene.add(grp);
-            GameState.terminals.push({ id, mesh: grp, screen, solved: false, pos: new THREE.Vector3(x,0,z) });
-        }
-
-        function createMonster() {
-            monsterMesh = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 10, 8), new THREE.MeshStandardMaterial({color:0x111111}));
-            body.position.y = 5; monsterMesh.add(body);
-            const eye = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 1), new THREE.MeshBasicMaterial({color:0xff0000}));
-            eye.position.set(0, 8, 2); monsterMesh.add(eye);
-            
-            // Add point light to monster
-            const mLight = new THREE.PointLight(0xff0000, 2, 30);
-            mLight.position.y = 8; monsterMesh.add(mLight);
-            
-            monsterMesh.position.copy(monsterPos);
-            scene.add(monsterMesh);
-        }
-
-        function createPlayerMesh(name, color) {
-            const grp = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 2), new THREE.MeshStandardMaterial({color}));
-            body.position.y = 3; grp.add(body);
-            
-            // Name tag
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle='transparent'; ctx.fillRect(0,0,256,64);
-            ctx.font='bold 32px Cairo'; ctx.fillStyle='#fff'; ctx.textAlign='center';
-            ctx.fillText(name, 128, 40);
-            const tex = new THREE.CanvasTexture(canvas);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: tex}));
-            sprite.position.set(0, 7, 0); sprite.scale.set(8, 2, 1);
-            grp.add(sprite);
-            return grp;
-        }
-
-        /**
-         * ========================================================
-         * 5. MULTIPLAYER NETWORKING (PeerJS)
-         * ========================================================
-         */
-        let peer, myConn = null, connections = [];
-        const netStatus = document.getElementById('network-status');
-
-        function initNetwork() {
-            const fullRoomId = "ziadpro_" + GameState.roomCode;
-            
-            if (GameState.mode === 'host') {
-                peer = new Peer(fullRoomId);
-                peer.on('open', id => {
-                    netStatus.innerText = "أنت المستضيف - الغرفة: " + GameState.roomCode;
-                    netStatus.style.color = "#2ecc71";
-                    
-                    // Host generates map and sends it to clients
-                    const grid = generateMazeGrid(Config.mapWidth, Config.mapHeight);
-                    build3DMaze(grid);
-                });
-
-                peer.on('connection', conn => {
-                    connections.push(conn);
-                    conn.on('data', data => handleNetData(data, conn));
-                    // Send map to new client
-                    conn.on('open', () => {
-                        conn.send({ type: 'map_sync', grid: GameState.mazeGrid });
-                        conn.send({ type: 'sys_msg', msg: "مرحباً بك في خادم زياد الاحترافي!" });
-                        broadcastPlayers();
-                    });
-                });
-            } else {
-                peer = new Peer(); // Random ID for client
-                peer.on('open', id => {
-                    netStatus.innerText = "جاري الاتصال بالمستضيف...";
-                    myConn = peer.connect(fullRoomId);
-                    myConn.on('open', () => {
-                        netStatus.innerText = "متصل - الغرفة: " + GameState.roomCode;
-                        netStatus.style.color = "#f39c12";
-                        // Tell host my info
-                        myConn.send({ type: 'player_join', id: myPlayerId, name: GameState.playerName, color: myColor });
-                    });
-                    myConn.on('data', data => handleNetData(data, myConn));
-                });
-            }
-            
-            // Network Tick (20 times per sec)
-            setInterval(networkTick, 50);
-        }
-
-        function networkTick() {
-            if(GameState.inMenu || GameState.isGameOver) return;
-            
-            const myPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z, r: camera.rotation.y };
-            
-            if (GameState.mode === 'host') {
-                // Host sends its pos, monster pos, and relays clients
-                let pData = { [myPlayerId]: { pos: myPos, name: GameState.playerName, color: myColor } };
-                for(let id in playersMap) { pData[id] = { pos: playersMap[id].userData.targetPos, name: playersMap[id].userData.name, color: playersMap[id].userData.color }; }
-                
-                const packet = { type: 'state_sync', players: pData, monster: monsterPos };
-                connections.forEach(c => { if(c.open) c.send(packet); });
-            } else {
-                // Client sends its pos to host
-                if(myConn && myConn.open) myConn.send({ type: 'player_move', id: myPlayerId, pos: myPos });
-            }
-        }
-
-        function handleNetData(data, conn) {
-            switch(data.type) {
-                case 'map_sync':
-                    if(GameState.mode === 'join') build3DMaze(data.grid);
-                    break;
-                case 'player_join':
-                    if(GameState.mode === 'host') {
-                        addChatMsg("سيرفر", `اللاعب ${data.name} انضم!`);
-                        if(!playersMap[data.id]) createRemotePlayer(data.id, data.name, data.color);
-                    }
-                    break;
-                case 'player_move':
-                    if(GameState.mode === 'host' && playersMap[data.id]) {
-                        playersMap[data.id].userData.targetPos = data.pos;
-                    }
-                    break;
-                case 'state_sync':
-                    if(GameState.mode === 'join') {
-                        monsterPos.copy(data.monster);
-                        for(let id in data.players) {
-                            if(id === myPlayerId) continue;
-                            if(!playersMap[id]) createRemotePlayer(id, data.players[id].name, data.players[id].color);
-                            playersMap[id].userData.targetPos = data.players[id].pos;
-                        }
-                    }
-                    break;
-                case 'task_solve':
-                    solveTaskVisuals(data.taskId);
-                    break;
-                case 'chat_msg':
-                    addChatMsg(data.name, data.msg);
-                    break;
-            }
-        }
-
-        function createRemotePlayer(id, name, color) {
-            const mesh = createPlayerMesh(name, color);
-            mesh.userData = { name, color, targetPos: {x:0,y:0,z:0,r:0} };
-            scene.add(mesh);
-            playersMap[id] = mesh;
-        }
-
-        function broadcastPlayers() { /* Managed by state_sync */ }
-
-        /**
-         * ========================================================
-         * 6. CONTROLS & INPUT
-         * ========================================================
-         */
-        const keys = { w:false, a:false, s:false, d:false };
-        let camYaw = 0, camPitch = 0;
-        
-        // Keyboard Setup
-        window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.key.toLowerCase()) && document.activeElement.id !== 'chat-input') keys[e.key.toLowerCase()] = true; });
-        window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
-        
-        // Mouse Look (PC)
-        if(!Config.isMobile) {
-            document.getElementById('crosshair').style.display = 'block';
-            document.body.addEventListener('click', () => {
-                if(!GameState.inMenu && !GameState.inQuestion) document.body.requestPointerLock();
+            btnHost.addEventListener("click", () => {
+                initializeSession(true);
             });
-            document.addEventListener('mousemove', e => {
-                if(document.pointerLockElement === document.body && !GameState.inQuestion) {
-                    camYaw -= e.movementX * 0.002;
-                    camPitch -= e.movementY * 0.002;
-                    camPitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, camPitch));
+
+            btnJoin.addEventListener("click", () => {
+                initializeSession(false);
+            });
+
+            // تفعيل نموذج الدردشة
+            const chatForm = document.getElementById("chat-input-form");
+            chatForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const input = document.getElementById("chat-input");
+                const text = input.value.trim();
+                if (text) {
+                    appendChatMessage(GameState.myName, text);
+                    broadcastMessage({
+                        type: 'chat',
+                        name: GameState.myName,
+                        text: text
+                    });
+                    input.value = "";
                 }
             });
-        }
+        });
 
-        // Mobile Joysticks
-        let moveJoy = {x:0, y:0}, lookJoy = {x:0, y:0};
-        if(Config.isMobile) {
-            document.getElementById('joystick-left').style.display = 'block';
-            document.getElementById('joystick-right').style.display = 'block';
+        // دالة بدء جلسة الاتصال (Host أو Client)
+        function initializeSession(isHosting) {
+            GameState.isHost = isHosting;
+            GameState.myName = document.getElementById("input-name").value.trim() || "لاعب";
+            GameState.roomCode = document.getElementById("input-room").value.trim() || "default_room";
             
-            function setupJoystick(zoneId, knobId, outVec, isLook) {
-                const zone = document.getElementById(zoneId), knob = document.getElementById(knobId);
-                let active = false, center = {x:0,y:0}, tid = null;
-                zone.addEventListener('touchstart', e => {
-                    active = true; tid = e.changedTouches[0].identifier;
-                    const rect = zone.getBoundingClientRect();
-                    center = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-                    updateJoy(e.changedTouches[0]);
-                });
-                window.addEventListener('touchmove', e => {
-                    if(!active) return;
-                    for(let t of e.changedTouches) if(t.identifier === tid) updateJoy(t);
-                });
-                window.addEventListener('touchend', e => {
-                    for(let t of e.changedTouches) if(t.identifier === tid) {
-                        active = false; outVec.x = 0; outVec.y = 0;
-                        knob.style.transform = `translate(0px, 0px)`;
-                    }
-                });
-                function updateJoy(t) {
-                    let dx = t.clientX - center.x, dy = t.clientY - center.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    const maxDist = 35;
-                    if(dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
-                    knob.style.transform = `translate(${dx}px, ${dy}px)`;
-                    outVec.x = dx / maxDist; outVec.y = dy / maxDist;
-                }
-            }
-            setupJoystick('joystick-left', 'knob-left', moveJoy, false);
-            setupJoystick('joystick-right', 'knob-right', lookJoy, true);
-        }
+            const statusDiv = document.getElementById("room-status");
+            statusDiv.innerHTML = "جاري الاتصال بسيرفر الشبكة... <span class='loader'></span>";
 
-        /**
-         * ========================================================
-         * 7. GAME LOGIC & PHYSICS
-         * ========================================================
-         */
-        function checkCollision(pos) {
-            const pBox = new THREE.Box3(
-                new THREE.Vector3(pos.x - 2, 0, pos.z - 2),
-                new THREE.Vector3(pos.x + 2, 8, pos.z + 2)
-            );
-            for(let i=0; i<colliders.length; i++) {
-                if(pBox.intersectsBox(colliders[i])) return true;
-            }
-            return false;
-        }
+            // تخصيص معرف فريد للـ Peer لمنع التعارض
+            const prefix = isHosting ? "ziad_backrooms_host_" : "ziad_backrooms_client_";
+            const peerId = prefix + GameState.roomCode + "_" + Math.floor(Math.random() * 1000);
 
-        let activeTerminal = null;
-        
-        function updatePlayer(dt) {
-            if(GameState.inQuestion || GameState.isGameOver) return;
-            
-            // Movement Logic
-            let speed = 40 * dt;
-            let moveX = 0, moveZ = 0;
-            
-            if(Config.isMobile) {
-                moveX = moveJoy.x; moveZ = moveJoy.y;
-                camYaw -= lookJoy.x * 0.05;
-                camPitch = Math.max(-1.5, Math.min(1.5, camPitch - lookJoy.y * 0.05));
-            } else {
-                if(keys.w) moveZ = -1; if(keys.s) moveZ = 1;
-                if(keys.a) moveX = -1; if(keys.d) moveX = 1;
-            }
+            // إنشاء كائن الـ Peer الخاص بـ PeerJS
+            GameState.peer = new Peer(peerId, {
+                debug: 1
+            });
 
-            if(moveX !== 0 || moveZ !== 0) {
-                const forward = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)).normalize();
-                const right = new THREE.Vector3(Math.cos(camYaw), 0, -Math.sin(camYaw)).normalize();
-                
-                const dir = new THREE.Vector3()
-                    .addScaledVector(right, moveX)
-                    .addScaledVector(forward, -moveZ)
-                    .normalize();
-                
-                // Slide along walls
-                const nextX = camera.position.clone(); nextX.x += dir.x * speed;
-                if(!checkCollision(nextX)) camera.position.x = nextX.x;
-                
-                const nextZ = camera.position.clone(); nextZ.z += dir.z * speed;
-                if(!checkCollision(nextZ)) camera.position.z = nextZ.z;
-                
-                if(Math.random() < 0.05) SoundEngine.footstep();
-            }
-
-            camera.rotation.set(camPitch, camYaw, 0, 'YXZ');
-            playerLight.position.copy(camera.position);
-
-            // Terminal Interaction Check
-            activeTerminal = null;
-            document.getElementById('interact-btn').style.display = 'none';
-            for(let t of GameState.terminals) {
-                if(!t.solved && camera.position.distanceTo(t.pos) < 10) {
-                    activeTerminal = t;
-                    if(Config.isMobile) document.getElementById('interact-btn').style.display = 'flex';
-                    else {
-                        // Raycast for PC crosshair logic could go here, for now proximity is fine
-                        if(keys.e) openTerminal();
-                    }
-                    break;
-                }
-            }
-        }
-
-        // Host controls monster logic
-        function updateMonster(dt) {
-            if(GameState.mode !== 'host' || !monsterMesh) return;
-            
-            // Find closest player (Host + Clients)
-            let targets = [{pos: camera.position, id: myPlayerId}];
-            for(let id in playersMap) targets.push({pos: playersMap[id].position, id});
-            
-            let closest = null, minDist = Infinity;
-            for(let t of targets) {
-                let d = monsterPos.distanceTo(t.pos);
-                if(d < minDist) { minDist = d; closest = t; }
-            }
-            
-            if(closest) {
-                // Simple Pathfinding (Move towards player)
-                const dir = new THREE.Vector3().subVectors(closest.pos, monsterPos).normalize();
-                dir.y = 0; // Keep on ground
-                
-                const mSpeed = (20 + (GameState.tasksSolved * 2)) * dt; // Gets faster!
-                const nextM = monsterPos.clone().addScaledVector(dir, mSpeed);
-                
-                if(!checkCollision(nextM)) {
-                    monsterPos.copy(nextM);
+            GameState.peer.on('open', (id) => {
+                GameState.myId = id;
+                if (isHosting) {
+                    statusDiv.style.color = "#2ed573";
+                    statusDiv.innerText = "✅ تم إنشاء الهوست بنجاح! جاري دخول اللعبة...";
+                    setTimeout(startGameAsHost, 1000);
                 } else {
-                    // Try sliding
-                    const nextMx = monsterPos.clone(); nextMx.x += dir.x * mSpeed;
-                    if(!checkCollision(nextMx)) monsterPos.x = nextMx.x;
-                    const nextMz = monsterPos.clone(); nextMz.z += dir.z * mSpeed;
-                    if(!checkCollision(nextMz)) monsterPos.z = nextMz.z;
+                    // إذا كان اللاعب Client، يبحث عن الهوست ويتصل به
+                    connectToHost();
                 }
-                
-                monsterMesh.position.copy(monsterPos);
-                monsterMesh.lookAt(closest.pos.x, monsterPos.y, closest.pos.z);
-            }
-        }
-
-        // Client interpolates monster and other players
-        function interpolateEntities(dt) {
-            if(monsterMesh && GameState.mode === 'join') {
-                monsterMesh.position.lerp(monsterPos, 0.1);
-            }
-            
-            for(let id in playersMap) {
-                let p = playersMap[id];
-                p.position.lerp(new THREE.Vector3(p.userData.targetPos.x, p.userData.targetPos.y, p.userData.targetPos.z), 0.2);
-                p.rotation.y = p.userData.targetPos.r;
-            }
-        }
-
-        /**
-         * ========================================================
-         * 8. GAME SYSTEMS (Tasks, Chat, Minimap)
-         * ========================================================
-         */
-        function openTerminal() {
-            if(!activeTerminal || GameState.inQuestion) return;
-            GameState.inQuestion = true; document.exitPointerLock?.();
-            
-            const qObj = GameState.questions[activeTerminal.id % GameState.questions.length];
-            document.getElementById('q-text').innerText = qObj.q;
-            
-            const optsDiv = document.getElementById('q-options');
-            optsDiv.innerHTML = '';
-            
-            qObj.options.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'opt-btn'; btn.innerText = opt;
-                btn.onclick = () => answerQuestion(idx === qObj.correct);
-                optsDiv.appendChild(btn);
             });
-            
-            document.getElementById('question-modal').style.display = 'flex';
+
+            GameState.peer.on('error', (err) => {
+                statusDiv.style.color = "#ff4757";
+                statusDiv.innerText = "❌ حدث خطأ في الشبكة: " + err.type;
+            });
         }
 
-        function answerQuestion(isCorrect) {
-            document.getElementById('question-modal').style.display = 'none';
-            GameState.inQuestion = false;
+        // اتصال العميل (Client) بالهوست
+        function connectToHost() {
+            const statusDiv = document.getElementById("room-status");
+            const hostPeerId = "ziad_backrooms_host_" + GameState.roomCode + "_" + "..."; // سنقوم بالاتصال المباشر عبر معرف متوقع أو نافذة بحث
             
-            if(isCorrect) {
-                SoundEngine.success();
-                solveTaskVisuals(activeTerminal.id);
-                // Broadcast to others
-                if(GameState.mode === 'host') {
-                    connections.forEach(c => { if(c.open) c.send({type:'task_solve', taskId: activeTerminal.id}); });
-                } else if(myConn) {
-                    myConn.send({type:'task_solve', taskId: activeTerminal.id});
+            // للتبسيط، نقوم بإنشاء اتصال مباشر بالمعرف الأساسي للهوست
+            const targetHostId = "ziad_backrooms_host_" + GameState.roomCode;
+            
+            statusDiv.innerText = "جاري البحث عن الهوست والانضمام للغرفة...";
+            
+            // محاولة الاتصال بالهوست بناءً على الرمز المدخل
+            const conn = GameState.peer.connect("ziad_backrooms_host_" + GameState.roomCode + "_0"); // محاولة نمطية دقيقة
+            
+            // نظراً لأن المعرف العشوائي قد يتغير، سنستخدم معرف ثابت للهوست بناءً على اسم الغرفة لتسهيل الانضمام
+            // إعادة ضبط الهوست بمعرف ثابت:
+            setupClientConnection(targetHostId);
+        }
+
+        function setupClientConnection(hostId) {
+            // إعادة تهيئة الـ Peer بمعرف محدد للعميل والاتصال بهوست ذو معرف ثابت
+            GameState.peer.destroy();
+            
+            GameState.peer = new Peer({ debug: 1 });
+            
+            GameState.peer.on('open', (id) => {
+                GameState.myId = id;
+                const targetId = "ziad_host_master_" + GameState.roomCode;
+                
+                const conn = GameState.peer.connect(targetId);
+                GameState.hostConnection = conn;
+
+                conn.on('open', () => {
+                    document.getElementById("room-status").innerText = "✅ تم الاتصال بالغرفة بنجاح!";
+                    // إرسال معلومات اللاعب للهوست
+                    conn.send({
+                        type: 'join',
+                        id: GameState.myId,
+                        name: GameState.myName
+                    });
+                    setTimeout(startGameAsClient, 1000);
+                });
+
+                conn.on('data', (data) => {
+                    handleIncomingData(data);
+                });
+
+                conn.on('close', () => {
+                    alert("تم قطع الاتصال مع الهوست!");
+                    location.reload();
+                });
+            });
+
+            GameState.peer.on('error', (err) => {
+                document.getElementById("room-status").style.color = "#ff4757";
+                document.getElementById("room-status").innerText = "❌ لم يتم العثور على الهوست. تأكد من صحة رمز الغرفة.";
+            });
+        }
+
+        // بدء اللعبة كـ Host
+        function startGameAsHost() {
+            // إعادة إنشاء الـ Peer بمعرف ثابت للهوست لتسهيل انضمام الأصدقاء
+            GameState.peer.destroy();
+            const hostFixedId = "ziad_host_master_" + GameState.roomCode;
+            
+            GameState.peer = new Peer(hostFixedId, { debug: 1 });
+
+            GameState.peer.on('open', (id) => {
+                GameState.myId = id;
+                enterGameEnvironment();
+
+                // استقبال اتصالات اللاعبين الجدد
+                GameState.peer.on('connection', (conn) => {
+                    const clientId = conn.peer;
+                    GameState.connections[clientId] = conn;
+
+                    conn.on('data', (data) => {
+                        handleHostIncomingData(clientId, data);
+                    });
+
+                    conn.on('close', () => {
+                        delete GameState.connections[clientId];
+                        delete GameState.players[clientId];
+                        removePlayerMesh(clientId);
+                        updatePlayersCount();
+                    });
+                });
+            });
+
+            GameState.peer.on('error', (err) => {
+                if(err.type === 'unavailable-id') {
+                    alert("رمز الغرفة مستخدم بالفعل! اختر رمزاً آخر.");
+                    location.reload();
                 }
-            } else {
-                SoundEngine.error();
-                document.getElementById('damage-overlay').style.opacity = '1';
-                setTimeout(() => document.getElementById('damage-overlay').style.opacity = '0', 500);
-            }
+            });
         }
 
-        function solveTaskVisuals(taskId) {
-            const t = GameState.terminals.find(x => x.id === taskId);
-            if(t && !t.solved) {
-                t.solved = true;
-                t.screen.material.color.setHex(0x2ecc71); // Green
-                GameState.tasksSolved++;
-                document.getElementById('task-panel').innerText = `المهام: ${GameState.tasksSolved} / ${Config.totalTasks}`;
-            }
+        // بدء اللعبة كـ Client
+        function startGameAsClient() {
+            enterGameEnvironment();
         }
 
-        // Chat System
-        function sendChat() {
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if(!msg) return;
-            
-            addChatMsg(GameState.playerName, msg);
-            input.value = '';
-            
-            if(GameState.mode === 'host') {
-                connections.forEach(c => { if(c.open) c.send({type:'chat_msg', name: GameState.playerName, msg}); });
-            } else if(myConn) {
-                myConn.send({type:'chat_msg', name: GameState.playerName, msg});
-            }
-        }
-        function addChatMsg(name, msg) {
-            const box = document.getElementById('chat-messages');
-            box.innerHTML += `<div class="msg"><span>${name}:</span> ${msg}</div>`;
-            box.scrollTop = box.scrollHeight;
-        }
+        // الدخول الفعلي لبيئة اللعبة الرسومية Three.js
+        function enterGameEnvironment() {
+            GameState.inGame = true;
+            document.getElementById("menu-screen").style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById("menu-screen").style.display = "none";
+                document.getElementById("hud").style.display = "flex";
+                document.getElementById("chat-box").style.display = "flex";
+            }, 500);
 
-        // Minimap Render
-        const mCanvas = document.getElementById('minimap'), mCtx = mCanvas.getContext('2d');
-        function drawMinimap() {
-            if(GameState.inMenu || GameState.mazeGrid.length === 0) return;
-            mCtx.clearRect(0,0,150,150);
-            
-            // Draw grid
-            const scale = 3;
-            const cx = 75, cy = 75; // center of minimap
-            
-            mCtx.fillStyle = 'rgba(255,255,255,0.2)';
-            for(let z=0; z<Config.mapHeight; z++) {
-                for(let x=0; x<Config.mapWidth; x++) {
-                    if(GameState.mazeGrid[z][x] === 1) {
-                        let drawX = cx + (x - Config.mapWidth/2) * scale;
-                        let drawY = cy + (z - Config.mapHeight/2) * scale;
-                        mCtx.fillRect(drawX, drawY, scale, scale);
-                    }
-                }
-            }
-            
-            // Draw Me (Center)
-            mCtx.fillStyle = '#f1c40f'; mCtx.beginPath(); mCtx.arc(cx, cy, 3, 0, Math.PI*2); mCtx.fill();
-        }
-
-        /**
-         * ========================================================
-         * 9. MAIN LOOP & INIT
-         * ========================================================
-         */
-        const clock = new THREE.Clock();
-
-        function initGame(mode) {
-            GameState.mode = mode;
-            GameState.playerName = document.getElementById('p-name').value || "زياد";
-            GameState.roomCode = document.getElementById('r-code').value || "1234";
-            GameState.questions = QuestionBank[document.getElementById('q-category').value];
-            
-            document.getElementById('main-menu').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'block';
-            GameState.inMenu = false;
-            
-            initNetwork();
-            
-            // Timer Loop
-            setInterval(() => {
-                if(GameState.inMenu || GameState.isGameOver) return;
-                GameState.timeRemaining--;
-                let m = Math.floor(GameState.timeRemaining / 60), s = GameState.timeRemaining % 60;
-                document.getElementById('timer-panel').innerText = `الوقت: 0${m}:${s<10?'0':''}${s}`;
-            }, 1000);
-            
-            // Minimap Loop
-            setInterval(drawMinimap, 200);
-
+            initThreeScene();
+            initControls();
             animate();
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            if(GameState.inMenu) return;
+        // بناء عالم اللعبة والمشهد ثلاثي الأبعاد
+        function initThreeScene() {
+            const canvas = document.getElementById("game-canvas");
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a170e);
+            scene.fog = new THREE.FogExp2(0x1a170e, 0.035);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+
+            // إضاءة صفراء باهتة مميزة لبيئة الباكرومز (Level 0)
+            const ambientLight = new THREE.AmbientLight(0xfffaed, 0.7);
+            scene.add(ambientLight);
+
+            // توليد خريطة المتاهة
+            generateMaze();
+
+            // نافذة إعادة التحجيم
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // توليد عشوائي لخريطة الباكرومز
+        function generateMaze() {
+            // بناء الأرضية والجدران والأسقف الصفراء الشهيرة
+            const floorGeo = new THREE.PlaneGeometry(mazeWidth * tileSize, mazeHeight * tileSize);
             
-            const dt = clock.getDelta();
-            
-            updatePlayer(dt);
-            updateMonster(dt);
-            interpolateEntities(dt);
-            
-            // Danger Meter logic
-            if(monsterMesh) {
-                const dist = camera.position.distanceTo(monsterPos);
-                let dangerPct = Math.max(0, Math.min(100, ((80 - dist)/80)*100));
-                document.getElementById('danger-fill').style.width = dangerPct + '%';
-                
-                // Game Over Check
-                if(dist < 5) {
-                    GameState.isGameOver = true;
-                    document.exitPointerLock?.();
-                    alert("لقد أمسك بك الوحش! Game Over");
-                    location.reload();
+            // خامات الألوان النمطية للباكرومز (سجاد مهترئ، ورق حائط أصفر، أسقف مستعارة)
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xc4b454, roughness: 0.9 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set((mazeWidth * tileSize) / 2 - tileSize/2, 0, (mazeHeight * tileSize) / 2 - tileSize/2);
+            scene.add(floor);
+
+            const ceilingGeo = new THREE.PlaneGeometry(mazeWidth * tileSize, mazeHeight * tileSize);
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x8a7f45, roughness: 0.8 });
+            const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.set((mazeWidth * tileSize) / 2 - tileSize/2, 12, (mazeHeight * tileSize) / 2 - tileSize/2);
+            scene.add(ceiling);
+
+            // بناء جدران عشوائية مبسطة للمتاهة
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xd9c362, roughness: 0.7 });
+            const wallGeo = new THREE.BoxGeometry(tileSize, 12, 2);
+
+            for (let x = 0; x < mazeWidth; x++) {
+                for (let z = 0; z < mazeHeight; z++) {
+                    // خلق ممرات حرة في المنتصف وجدران في الأطراف وبشكل عشوائي منظم
+                    if (x === 0 || z === 0 || x === mazeWidth - 1 || z === mazeHeight - 1 || (x % 2 === 0 && z % 2 === 0)) {
+                        if (Math.random() > 0.3 || (x === 0 && z === 0)) continue;
+                        const wall = new THREE.Mesh(wallGeo, wallMat);
+                        wall.position.set(x * tileSize, 6, z * tileSize);
+                        scene.add(wall);
+                    }
                 }
             }
+        }
+
+        // إعداد عناصر التحكم بالحركة والمظهر (PointerLockControls)
+        function initControls() {
+            const canvas = document.getElementById("game-canvas");
+
+            canvas.addEventListener('click', () => {
+                canvas.requestPointerLock();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                switch (e.code) {
+                    case 'KeyW': moveForward = true; break;
+                    case 'KeyS': moveBackward = true; break;
+                    case 'KeyA': moveLeft = true; break;
+                    case 'KeyD': moveRight = true; break;
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                switch (e.code) {
+                    case 'KeyW': moveForward = false; break;
+                    case 'KeyS': moveBackward = false; break;
+                    case 'KeyA': moveLeft = false; break;
+                    case 'KeyD': moveRight = false; break;
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === canvas) {
+                    const movementX = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
+                    const movementY = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
+
+                    euler.setFromQuaternion(camera.quaternion);
+                    euler.y -= movementX * 0.002;
+                    euler.x -= movementY * 0.002;
+                    euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+                    camera.quaternion.setFromEuler(euler);
+                }
+            });
+        }
+
+        // حلقة التحديث المستمر للعبة (Game Loop)
+        function animate() {
+            if (!GameState.inGame) return;
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+
+            camera.translateX(-velocity.x * delta);
+            camera.translateZ(-velocity.z * delta);
+
+            // إرسال موقع اللاعب الحالي للشبكة دورياً
+            sendPlayerPositionToNetwork();
 
             renderer.render(scene, camera);
+            prevTime = time;
         }
-#ز
-        window.addEventListener('resize', () => {
+
+        // التعامل مع الشبكة وإرسال الموقع
+        let lastNetUpdate = 0;
+        function sendPlayerPositionToNetwork() {
+            const now = performance.now();
+            if (now - lastNetUpdate > 50) { // كل 50 ملي ثانية
+                lastNetUpdate = now;
+                const pos = camera.position;
+                const rot = camera.rotation;
+
+                const packet = {
+                    type: 'move',
+                    id: GameState.myId,
+                    name: GameState.myName,
+                    x: pos.x,
+                    y: pos.y,
+                    z: pos.z,
+                    ry: rot.y
+                };
+
+                if (GameState.isHost) {
+                    // إذا كان هوست، يوزع موقع اللاعب على باقي المتصلين
+                    broadcastData(packet, GameState.myId);
+                } else if (GameState.hostConnection && GameState.hostConnection.open) {
+                    GameState.hostConnection.send(packet);
+                }
+            }
+        }
+
+        // معالجة البيانات القادمة للـ Host
+        function handleHostIncomingData(clientId, data) {
+            if (data.type === 'join') {
+                GameState.players[clientId] = { name: data.name };
+                createPlayerMesh(clientId, data.name);
+                updatePlayersCount();
+            } else if (data.type === 'move') {
+                updatePlayerPosition(data);
+                // إعادة توجيه الموقع لباقي اللاعبين (Broadcast)
+                broadcastData(data, clientId);
+            } else if (data.type === 'chat') {
+                appendChatMessage(data.name, data.text);
+                broadcastData(data, clientId);
+            }
+        }
+
+        // معالجة البيانات القادمة للـ Client
+        function handleIncomingData(data) {
+            if (data.type === 'move') {
+                updatePlayerPosition(data);
+            } else if (data.type === 'chat') {
+                appendChatMessage(data.name, data.text);
+            }
+        }
+
+        // نشر البيانات لكل المتصلين (خاص بالهوست)
+        function broadcastData(data, excludeId) {
+            for (let id in GameState.connections) {
+                if (id !== excludeId) {
+                    GameState.connections[id].send(data);
+                }
+            }
+        }
+
+        // بث رسالة نصية للجميع
+        function broadcastMessage(data) {
+            if (GameState.isHost) {
+                broadcastData(data, null);
+            } else if (GameState.hostConnection && GameState.hostConnection.open) {
+                GameState.hostConnection.send(data);
+            }
+        }
+
+        // إنشاء مجسم بصري للاعبين الآخرين في المشهد
+        const remotePlayerMeshes = {};
+        function createPlayerMesh(id, name) {
+            if (remotePlayerMeshes[id]) return;
+            const geometry = new THREE.BoxGeometry(2, 5, 2);
+            const material = new THREE.MeshStandardMaterial({ color: 0x3498db });
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+            remotePlayerMeshes[id] = mesh;
+        }
+
+        function updatePlayerPosition(data) {
+            let mesh = remotePlayerMeshes[data.id];
+            if (!mesh) {
+                createPlayerMesh(data.id, data.name);
+                mesh = remotePlayerMeshes[data.id];
+            }
+            if (mesh) {
+                mesh.position.set(data.x, data.y, data.z);
+                mesh.rotation.y = data.ry;
+            }
+        }
+
+        function removePlayerMesh(id) {
+            if (remotePlayerMeshes[id]) {
+                scene.remove(remotePlayerMeshes[id]);
+                delete remotePlayerMeshes[id];
+            }
+        }
+
+        function updatePlayersCount() {
+            const count = Object.keys(GameState.connections).length + 1;
+            document.getElementById("hud-players").innerText = count;
+        }
+
+        // إضافة رسالة في صندوق الدردشة
+        function appendChatMessage(name, text) {
+            const chatMessages = document.getElementById("chat-messages");
+            const div = document.createElement("div");
+            div.className = "chat-msg";
+            div.innerHTML = `<span class="user">${escapeHtml(name)}:</span> ${escapeHtml(text)}`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
+        }
     </script>
 </body>
 </html>
