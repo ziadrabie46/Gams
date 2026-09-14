@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - أونلاين عالمي</title>
+    <title>الهروب من الباك رومز - أونلاين عالمي كامل</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
@@ -23,9 +23,11 @@
             background: #1e272e; color: #fff; text-align: center; outline: none; width: 250px;
         }
         #main-menu button {
-            padding: 12px 28px; font-size: 1.2rem; border-radius: 8px; border: none; margin: 15px;
+            padding: 14px 32px; font-size: 1.3rem; border-radius: 8px; border: none; margin: 15px;
             background: #f1c40f; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s;
+            pointer-events: auto; z-index: 15;
         }
+        #main-menu button:active { transform: scale(0.95); background: #d4ac0d; }
 
         #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; display: none; }
         
@@ -84,7 +86,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 90%; max-width: 550px; background: rgba(15, 15, 15, 0.98);
             border: 2px solid #f1c40f; border-radius: 15px; padding: 25px;
-            text-align: center; color: #fff; pointer-events: auto; display: none;
+            text-align: center; color: #fff; pointer-events: auto; display: none; z-index: 25;
         }
         #question-text { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -97,28 +99,27 @@
         #game-over {
             position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.95);
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; color: #fff; text-align: center; padding: 20px;
+            z-index: 30; color: #fff; text-align: center; padding: 20px;
         }
         #game-over h2 { font-size: 3.2rem; margin-bottom: 10px; color: #ff4757; }
         #game-over p { font-size: 1.3rem; margin-bottom: 20px; max-width: 600px; line-height: 1.6; }
-        #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+        #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; pointer-events: auto; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- مكتبة Socket.io للاتصال الخارجي العالمي السحابي -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
     <div id="main-menu">
-        <h1>الهروب من الباك رومز - أونلاين عالمي</h1>
-        <p>العب مع الأصدقاء عبر الإنترنت من أي مكان في العالم!</p>
+        <h1>الهروب من الباك رومز</h1>
+        <p>الوضع العالمي المتصل (Multiplayer)</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
-            <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="لاعب عالمي">
+            <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="بطل الباك رومز">
         </div>
 
-        <button onclick="connectAndStartGame()">الاتصال بالخادم العالمي والبدء</button>
+        <button id="start-btn" type="button">دخول اللعبة</button>
     </div>
 
     <div id="ui-container">
@@ -133,10 +134,10 @@
         </div>
 
         <div id="notification-banner">تم إنهاء المهمة!</div>
-        <div id="server-status">جاري الاتصال بالعالمي...</div>
+        <div id="server-status">جاري الاتصال بالسحاب...</div>
         <div id="touch-camera-zone"></div>
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
-        <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
+        <div id="action-btn">حل!</div>
 
         <div id="question-card">
             <div id="question-text">السؤال...</div>
@@ -147,12 +148,10 @@
     <div id="game-over">
         <h2 id="game-over-title">Game Over</h2>
         <p id="game-over-msg"></p>
-        <button onclick="resetToMenu()">الرجوع للقائمة</button>
+        <button id="restart-btn" type="button">الرجوع للقائمة</button>
     </div>
 
     <script>
-        // الاتصال بخادم Socket.io عام ومستقر أونلاين
-        // يمكنك لاحقاً استبدال الرابط بخادمك الخاص على Glitch أو Render
         let socket = null;
         let isOnlineConnected = false;
 
@@ -216,7 +215,7 @@
             { q: "تضم قارة إفريقيا كم دولة مختلفة المساحة؟", options: ["45 دولة", "54 دولة", "60 دولة", "30 دولة"], correct: 1 }
         ];
 
-        let playerName = "لاعب عالمي";
+        let playerName = "بطل الباك رومز";
         let activeTerminal = null;
         let isGameOver = false;
         let inQuestionMenu = false;
@@ -282,7 +281,6 @@
                 new THREE.Vector3(targetPosition.x - radius, 0, targetPosition.z - radius),
                 new THREE.Vector3(targetPosition.x + radius, 2, targetPosition.z + radius)
             );
-
             for (let box of wallBoundingBoxes) {
                 if (playerBox.intersectsBox(box)) return true;
             }
@@ -322,7 +320,6 @@
 
         function buildMonsterPhase1() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
-            
             const monsterMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
             monsterBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(3, 5, 3), monsterMat);
             monsterBodyMesh.position.y = 2.5;
@@ -337,7 +334,6 @@
 
         function buildMonsterPhase2() {
             while(monsterGroup.children.length > 0) monsterGroup.remove(monsterGroup.children[0]);
-
             const monsterMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.2 });
             monsterBodyMesh = new THREE.Mesh(new THREE.BoxGeometry(4.5, 7.5, 4.5), monsterMat);
             monsterBodyMesh.position.y = 3.75;
@@ -419,7 +415,7 @@
             terminals.push({ group, arrow, screenMesh, solved: false, index: i });
         }
 
-        // أداة اللمس والكاميرا
+        // التعامل مع الكاميرا واللمس
         const touchCamZone = document.getElementById('touch-camera-zone');
         let isCamDragging = false, lastTouchPos = { x: 0, y: 0 }, activeCamTouchId = null;
 
@@ -516,19 +512,14 @@
                 const moveDirection = new THREE.Vector3().addScaledVector(forward, -moveZ).addScaledVector(right, moveX).normalize();
 
                 const nextPosX = playerGroup.position.clone().addScaledVector(new THREE.Vector3(moveDirection.x, 0, 0), speed);
-                if (!checkCollision(nextPosX, 0.9)) {
-                    playerGroup.position.x = nextPosX.x;
-                }
+                if (!checkCollision(nextPosX, 0.9)) playerGroup.position.x = nextPosX.x;
 
                 const nextPosZ = playerGroup.position.clone().addScaledVector(new THREE.Vector3(0, 0, moveDirection.z), speed);
-                if (!checkCollision(nextPosZ, 0.9)) {
-                    playerGroup.position.z = nextPosZ.z;
-                }
+                if (!checkCollision(nextPosZ, 0.9)) playerGroup.position.z = nextPosZ.z;
 
                 playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
             }
 
-            // إرسال موقع اللاعب للخادم العالمي إذا كان متصلاً
             if (isOnlineConnected && socket) {
                 socket.emit('playerMove', { x: playerGroup.position.x, z: playerGroup.position.z, rot: playerGroup.rotation.y });
             }
@@ -542,37 +533,43 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        function connectAndStartGame() {
+        // ربط زر الدخول بشكل مضمون (يدعم اللمس والنقر)
+        document.getElementById('start-btn').addEventListener('click', initializeGameSession);
+        document.getElementById('start-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            initializeGameSession();
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+
+        function initializeGameSession() {
             const nameInput = document.getElementById('player-name-input').value.trim();
-            playerName = nameInput !== "" ? nameInput : "لاعب عالمي";
+            playerName = nameInput !== "" ? nameInput : "بطل الباك رومز";
             updatePlayerNameTag(playerName);
 
-            document.getElementById('server-status').innerText = "جاري الاتصال بالخادم العالمي...";
+            document.getElementById('server-status').innerText = "جاري الاتصال بالعالمي...";
 
-            // محاولة الاتصال بالخادم العالمي العام
+            // بدء تشغيل المحرك فوراً للمستخدم لضمان عدم التعليق
+            startGameEngine();
+
+            // الاتصال الأونلاين الآمن
             try {
-                // استخدام خادم تجريبي سحابي عام لـ Socket.io أو الاتصال الاحتياطي الفوري
-                socket = io("https://socket-io-chat-example.glitch.me", { transports: ['websocket', 'polling'] });
+                socket = io("https://socket-io-chat-example.glitch.me", { transports: ['websocket', 'polling'], timeout: 4000 });
 
                 socket.on('connect', () => {
                     isOnlineConnected = true;
-                    document.getElementById('server-status').innerText = "متصل أونلاين عالمياً 🟢";
+                    document.getElementById('server-status').innerText = "متصل أونلاين 🟢";
                     socket.emit('joinGame', { name: playerName });
                 });
 
                 socket.on('connect_error', () => {
-                    fallbackToSoloAndLocalOnline();
+                    isOnlineConnected = false;
+                    document.getElementById('server-status').innerText = "وضع محلي سحابي آمن 🟡";
                 });
-            } catch (e) {
-                fallbackToSoloAndLocalOnline();
+            } catch (err) {
+                isOnlineConnected = false;
+                document.getElementById('server-status').innerText = "وضع محلي سحابي آمن 🟡";
             }
-
-            startGameEngine();
-        }
-
-        function fallbackToSoloAndLocalOnline() {
-            isOnlineConnected = false;
-            document.getElementById('server-status').innerText = "وضع محلي سحابي ذاتي (مستقر)";
         }
 
         function startGameEngine() {
@@ -610,6 +607,12 @@
             });
         }
 
+        document.getElementById('action-btn').addEventListener('click', interactWithTerminal);
+        document.getElementById('action-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            interactWithTerminal();
+        });
+
         function interactWithTerminal() {
             if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
 
@@ -626,6 +629,7 @@
                 btn.className = 'option-btn';
                 btn.innerText = opt;
                 btn.onclick = () => handleAnswer(idx, qData.correct);
+                btn.ontouchend = (e) => { e.preventDefault(); handleAnswer(idx, qData.correct); };
                 optionsContainer.appendChild(btn);
             });
 
@@ -761,9 +765,7 @@
                 monsterGroup.position.copy(nextMonsterPos);
             } else {
                 const slidePos = monsterGroup.position.clone().addScaledVector(new THREE.Vector3(-moveDir.z, 0, moveDir.x), monsterSpeed);
-                if (!checkCollision(slidePos, 2.0)) {
-                    monsterGroup.position.copy(slidePos);
-                }
+                if (!checkCollision(slidePos, 2.0)) monsterGroup.position.copy(slidePos);
             }
 
             const distance = monsterGroup.position.distanceTo(playerGroup.position);
@@ -780,13 +782,9 @@
         function endGame(won, message) {
             isGameOver = true;
             document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطك الوحش - خسارة!";
-            document.getElementById('game-over-title'].style.color = won ? "#2ed573" : "#ff4757";
+            document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
             document.getElementById('game-over-msg').innerText = message;
             document.getElementById('game-over').style.display = 'flex';
-        }
-
-        function resetToMenu() {
-            location.reload();
         }
 
         function animate() {
