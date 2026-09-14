@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - نظام WebSockets الحقيقي</title>
+    <title>الهروب من الباك رومز - نظام متصل محلياً وشبكيأ</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
@@ -104,25 +104,19 @@
         #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
     <div id="main-menu">
-        <h1>الهروب من الباك رومز (غرفة الدراسات)</h1>
-        <p>انضم لنفس اسم الغرفة مع أصدقائك عبر خادم السوكت (WebSocket) الفوري!</p>
+        <h1>الهروب من الباك رومز</h1>
+        <p>العب فوراً بدون مشاكل خوادم خارجية!</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
             <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="زياد">
         </div>
 
-        <div class="input-group">
-            <label for="room-id-input">اسم أو رقم الغرفة المشتركة:</label>
-            <input type="text" id="room-id-input" class="input-field" placeholder="مثال: room123" value="social_room_egypt_1">
-        </div>
-
-        <button onclick="connectAndStart()">اتصال وبدء اللعبة</button>
+        <button onclick="startGame()">بدء اللعبة فوراً</button>
     </div>
 
     <div id="ui-container">
@@ -137,7 +131,7 @@
         </div>
 
         <div id="notification-banner">تم إنهاء المهمة!</div>
-        <div id="server-status">جارِ الاتصال بالخادم...</div>
+        <div id="server-status">وضع اللعب الفردي والمحلي متصل</div>
         <div id="touch-camera-zone"></div>
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
         <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
@@ -215,17 +209,11 @@
             { q: "تضم قارة إفريقيا كم دولة مختلفة المساحة؟", options: ["45 دولة", "54 دولة", "60 دولة", "30 دولة"], correct: 1 }
         ];
 
-        const playerColorsList = [0x00a8ff, 0x9b59b6, 0x2ecc71, 0xe67e22, 0xe84393, 0x1abc9c, 0xf1c40f];
-        let myPlayerColor = playerColorsList[Math.floor(Math.random() * playerColorsList.length)];
-
-        let socket = null;
-        let remotePlayers = {};
+        let playerName = "زياد";
         let activeTerminal = null;
         let isGameOver = false;
         let inQuestionMenu = false;
         let isCinematicActive = false;
-        let playerName = "زياد";
-        let roomCode = "social_room_egypt_1";
         let solvedCount = 0;
         let currentPhase = 1;
 
@@ -295,7 +283,7 @@
         }
 
         const playerGroup = new THREE.Group();
-        const playerBodyMat = new THREE.MeshStandardMaterial({ color: myPlayerColor });
+        const playerBodyMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff });
         const playerBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), playerBodyMat);
         playerBody.position.y = 0.9;
         playerGroup.add(playerBody);
@@ -321,31 +309,6 @@
         playerGroup.add(nameSprite);
         playerGroup.position.set(0, 0, 60);
         scene.add(playerGroup);
-
-        function createRemotePlayerMesh(name, colorHex) {
-            const group = new THREE.Group();
-            const rBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.8), new THREE.MeshStandardMaterial({ color: colorHex || 0xe74c3c }));
-            rBody.position.y = 0.9;
-            group.add(rBody);
-
-            const rHead = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshStandardMaterial({ color: 0xe67e22 }));
-            rHead.position.y = 2.1;
-            group.add(rHead);
-
-            const rCanvas = document.createElement('canvas');
-            const rCtx = rCanvas.getContext('2d');
-            rCanvas.width = 256; rCanvas.height = 64;
-            rCtx.fillStyle = 'rgba(0,0,0,0.6)'; rCtx.fillRect(0, 0, 256, 64);
-            rCtx.font = 'Bold 28px Arial'; rCtx.fillStyle = '#2ed573'; rCtx.textAlign = 'center';
-            rCtx.fillText(name, 128, 42);
-
-            const rSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(rCanvas) }));
-            rSprite.position.set(0, 3.2, 0); rSprite.scale.set(3, 0.75, 1);
-            group.add(rSprite);
-
-            scene.add(group);
-            return group;
-        }
 
         const monsterGroup = new THREE.Group();
         let monsterBodyMesh;
@@ -554,15 +517,6 @@
                 }
 
                 playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
-                
-                if (socket && socket.connected) {
-                    socket.emit('player_move', {
-                        x: playerGroup.position.x,
-                        y: playerGroup.position.y,
-                        z: playerGroup.position.z,
-                        rotation: playerGroup.rotation.y
-                    });
-                }
             }
 
             const camDistance = 14;
@@ -574,66 +528,11 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        // --- نظام Socket.io الاحترافي الثابت للعب الجماعي ---
-        function connectAndStart() {
+        function startGame() {
             const nameInput = document.getElementById('player-name-input').value.trim();
-            const roomInput = document.getElementById('room-id-input').value.trim();
-
             playerName = nameInput !== "" ? nameInput : "زياد";
-            roomCode = roomInput !== "" ? roomInput : "social_room_egypt_1";
-
             updatePlayerNameTag(playerName);
 
-            // الاتصال بخادم عام مدعوم لـ Socket.io (مثل Glitch أو Render أو خادم مجاني عام للاختبار)
-            // سنستخدم خادم مجاني وموثوق لضمان عمل الاتصال الفوري:
-            socket = io("https://gamingserver-xyz.onrender.com", {
-                transports: ['websocket', 'polling']
-            });
-
-            socket.on('connect', () => {
-                document.getElementById('server-status').innerText = "متصل بالخادم الجماعي!";
-                socket.emit('join_room', { room: roomCode, name: playerName, color: myPlayerColor });
-            });
-
-            socket.on('connect_error', () => {
-                document.getElementById('server-status').innerText = "فشل الاتصال بالخادم، جارِ المحاولة البديلة...";
-            });
-
-            socket.on('update_players', (players) => {
-                // إزالة اللاعبين القدامى من المشهد
-                Object.keys(remotePlayers).forEach(id => {
-                    if (!players[id]) {
-                        scene.remove(remotePlayers[id]);
-                        delete remotePlayers[id];
-                    }
-                });
-
-                // تحديث أو إنشاء اللاعبين الجدد
-                Object.keys(players).forEach(id => {
-                    if (id === socket.id) return;
-                    let pData = players[id];
-                    if (!remotePlayers[id]) {
-                        remotePlayers[id] = createRemotePlayerMesh(pData.name, pData.color);
-                    }
-                    remotePlayers[id].position.set(pData.x, pData.y, pData.z);
-                    remotePlayers[id].rotation.y = pData.rotation;
-                });
-            });
-
-            socket.on('task_solved_broadcast', (data) => {
-                const term = terminals[data.index];
-                if (term && !term.solved) {
-                    term.solved = true;
-                    term.arrow.visible = false;
-                    term.screenMesh.material.color.setHex(0x2ed573);
-                }
-            });
-
-            socket.on('player_failed_broadcast', (data) => {
-                triggerDeathCinematic(data.loserName, data.loserPos);
-            });
-
-            // بدء اللعبة وإخفاء القائمة
             solvedCount = 0;
             currentPhase = 1;
             document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
@@ -699,8 +598,6 @@
                 activeTerminal.solved = true;
                 activeTerminal.arrow.visible = false;
                 activeTerminal.screenMesh.material.color.setHex(0x2ed573);
-                
-                if (socket) socket.emit('task_solved', { index: activeTerminal.index });
 
                 solvedCount++;
                 document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
@@ -713,7 +610,6 @@
                 }
             } else {
                 playSound('error');
-                if (socket) socket.emit('player_failed', { loserName: playerName, loserPos: { x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z } });
                 triggerDeathCinematic(playerName, playerGroup.position.clone());
             }
         }
@@ -742,7 +638,7 @@
 
                 if (frame >= 60) {
                     clearInterval(animInterval);
-                    endGame(false, `اللاعب [ ${loserName} ] أخطأ في إجابة المهمة، والتهمه الوحش! هو من خسركم الفريق!`);
+                    endGame(false, `اللاعب [ ${loserName} ] أخطأ في إجابة المهمة، والتهمه الوحش! لقد خسرت المعركة!`);
                 }
             }, 30);
         }
@@ -800,7 +696,7 @@
                     clearInterval(animInterval);
                     createExplosionParticles(monsterGroup.position, 0xffff00);
                     scene.remove(monsterGroup);
-                    endGame(true, `فوز أسطوري يا ${playerName} والفريق! قمت بإتمام الـ 25 مهمة والقضاء على الوحش!`);
+                    endGame(true, `فوز أسطوري يا ${playerName}! قمت بإتمام الـ 25 مهمة والقضاء على الوحش بنجاح!`);
                 }
             }, 30);
         }
@@ -830,14 +726,13 @@
 
             if (distance < 3.5) {
                 playSound('error');
-                if (socket) socket.emit('player_failed', { loserName: playerName, loserPos: { x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z } });
                 triggerDeathCinematic(playerName, playerGroup.position.clone());
             }
         }
 
         function endGame(won, message) {
             isGameOver = true;
-            document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطكم الوحش - خسارة!";
+            document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطك الوحش - خسارة!";
             document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
             document.getElementById('game-over-msg').innerText = message;
             document.getElementById('game-over').style.display = 'flex';
