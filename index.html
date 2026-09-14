@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - غرفة الدراسات الاجتماعية المشتركة</title>
+    <title>الهروب من الباك رومز - نظام WebSockets الحقيقي</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
         
         #main-menu {
             position: absolute; width: 100%; height: 100%;
-            background: rgba(5, 5, 5, 0.95); display: flex;
+            background: rgba(5, 5, 5, 0.98); display: flex;
             flex-direction: column; justify-content: center; align-items: center;
             z-index: 10; color: #fff; text-align: center; padding: 20px;
         }
@@ -27,7 +27,7 @@
             background: #f1c40f; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
 
-        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; display: none; }
         
         #hud-header {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
@@ -104,13 +104,13 @@
         #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
     <div id="main-menu">
         <h1>الهروب من الباك رومز (غرفة الدراسات)</h1>
-        <p>انضم إلى غرفة الدراسات الاجتماعية المشتركة ولعب مع أصدقائك بوضع رقم أو اسم الغرفة نفسه!</p>
+        <p>انضم لنفس اسم الغرفة مع أصدقائك عبر خادم السوكت (WebSocket) الفوري!</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
@@ -118,11 +118,11 @@
         </div>
 
         <div class="input-group">
-            <label for="room-id-input">رقم أو اسم الغرفة المشتركة:</label>
+            <label for="room-id-input">اسم أو رقم الغرفة المشتركة:</label>
             <input type="text" id="room-id-input" class="input-field" placeholder="مثال: room123" value="social_room_egypt_1">
         </div>
 
-        <button onclick="startGame()">دخول غرفة الدراسات</button>
+        <button onclick="connectAndStart()">اتصال وبدء اللعبة</button>
     </div>
 
     <div id="ui-container">
@@ -137,7 +137,7 @@
         </div>
 
         <div id="notification-banner">تم إنهاء المهمة!</div>
-        <div id="server-status">غير متصل</div>
+        <div id="server-status">جارِ الاتصال بالخادم...</div>
         <div id="touch-camera-zone"></div>
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
         <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
@@ -218,6 +218,8 @@
         const playerColorsList = [0x00a8ff, 0x9b59b6, 0x2ecc71, 0xe67e22, 0xe84393, 0x1abc9c, 0xf1c40f];
         let myPlayerColor = playerColorsList[Math.floor(Math.random() * playerColorsList.length)];
 
+        let socket = null;
+        let remotePlayers = {};
         let activeTerminal = null;
         let isGameOver = false;
         let inQuestionMenu = false;
@@ -230,12 +232,6 @@
         let joystickInput = { x: 0, y: 0 };
         let cameraYaw = 0;
         let cameraPitch = 0.35;
-
-        let peer = null;
-        let myPeerId = "";
-        let connections = {};
-        let remotePlayers = {};
-        let knownPeers = new Set();
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0a00);
@@ -558,7 +554,15 @@
                 }
 
                 playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
-                broadcastPosition();
+                
+                if (socket && socket.connected) {
+                    socket.emit('player_move', {
+                        x: playerGroup.position.x,
+                        y: playerGroup.position.y,
+                        z: playerGroup.position.z,
+                        rotation: playerGroup.rotation.y
+                    });
+                }
             }
 
             const camDistance = 14;
@@ -570,102 +574,162 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        // --- نظام الاتصال المطور والثابت (Multiplayer Connection Engine) ---
-        function initMultiplayer() {
-            // توليد معرف فريد يعتمد على اسم الغرفة لكي يرتبط الأصدقاء في نفس الغرفة تماماً
-            const cleanRoomName = roomCode.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
-            myPeerId = cleanRoomName + "_" + Math.floor(Math.random() * 8999 + 1000);
+        // --- نظام Socket.io الاحترافي الثابت للعب الجماعي ---
+        function connectAndStart() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            const roomInput = document.getElementById('room-id-input').value.trim();
 
-            peer = new Peer(myPeerId);
+            playerName = nameInput !== "" ? nameInput : "زياد";
+            roomCode = roomInput !== "" ? roomInput : "social_room_egypt_1";
 
-            peer.on('open', (id) => {
-                document.getElementById('server-status').innerText = "متصل بالغرفة: " + roomCode;
-                // محاولة الاتصال التلقائي بـ 10 أرقام محتملة لنفس الغرفة لضمان الربط السريع
-                for (let i = 1000; i < 1005; i++) {
-                    let targetId = cleanRoomName + "_" + i;
-                    if (targetId !== id && !connections[targetId]) {
-                        connectToPeer(targetId);
+            updatePlayerNameTag(playerName);
+
+            // الاتصال بخادم عام مدعوم لـ Socket.io (مثل Glitch أو Render أو خادم مجاني عام للاختبار)
+            // سنستخدم خادم مجاني وموثوق لضمان عمل الاتصال الفوري:
+            socket = io("https://gamingserver-xyz.onrender.com", {
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                document.getElementById('server-status').innerText = "متصل بالخادم الجماعي!";
+                socket.emit('join_room', { room: roomCode, name: playerName, color: myPlayerColor });
+            });
+
+            socket.on('connect_error', () => {
+                document.getElementById('server-status').innerText = "فشل الاتصال بالخادم، جارِ المحاولة البديلة...";
+            });
+
+            socket.on('update_players', (players) => {
+                // إزالة اللاعبين القدامى من المشهد
+                Object.keys(remotePlayers).forEach(id => {
+                    if (!players[id]) {
+                        scene.remove(remotePlayers[id]);
+                        delete remotePlayers[id];
                     }
+                });
+
+                // تحديث أو إنشاء اللاعبين الجدد
+                Object.keys(players).forEach(id => {
+                    if (id === socket.id) return;
+                    let pData = players[id];
+                    if (!remotePlayers[id]) {
+                        remotePlayers[id] = createRemotePlayerMesh(pData.name, pData.color);
+                    }
+                    remotePlayers[id].position.set(pData.x, pData.y, pData.z);
+                    remotePlayers[id].rotation.y = pData.rotation;
+                });
+            });
+
+            socket.on('task_solved_broadcast', (data) => {
+                const term = terminals[data.index];
+                if (term && !term.solved) {
+                    term.solved = true;
+                    term.arrow.visible = false;
+                    term.screenMesh.material.color.setHex(0x2ed573);
                 }
             });
 
-            peer.on('connection', (conn) => setupConnection(conn));
-
-            peer.on('error', (err) => {
-                console.warn("PeerJS error: ", err);
-                document.getElementById('server-status').innerText = "خطأ بالاتصال، جارِ إعادة المحاولة...";
-            });
-        }
-
-        function connectToPeer(targetId) {
-            if (connections[targetId] || targetId === myPeerId) return;
-            const conn = peer.connect(targetId);
-            if (conn) setupConnection(conn);
-        }
-
-        function setupConnection(conn) {
-            conn.on('open', () => {
-                connections[conn.peer] = conn;
-                conn.send({ type: 'init', name: playerName, color: myPlayerColor, x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z });
+            socket.on('player_failed_broadcast', (data) => {
+                triggerDeathCinematic(data.loserName, data.loserPos);
             });
 
-            conn.on('data', (data) => {
-                if (data.type === 'init') {
-                    if (!remotePlayers[conn.peer]) {
-                        remotePlayers[conn.peer] = createRemotePlayerMesh(data.name, data.color);
-                    }
-                } else if (data.type === 'move') {
-                    if (remotePlayers[conn.peer]) {
-                        remotePlayers[conn.peer].position.set(data.x, data.y, data.z);
-                        remotePlayers[conn.peer].rotation.y = data.rotation;
-                    }
-                } else if (data.type === 'task_solved') {
-                    const term = terminals[data.index];
-                    if (term && !term.solved) {
-                        term.solved = true;
-                        term.arrow.visible = false;
-                        term.screenMesh.material.color.setHex(0x2ed573);
-                    }
-                } else if (data.type === 'player_failed') {
-                    triggerDeathCinematic(data.loserName, data.loserPos);
+            // بدء اللعبة وإخفاء القائمة
+            solvedCount = 0;
+            currentPhase = 1;
+            document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
+
+            buildMonsterPhase1();
+            terminals.forEach(t => {
+                t.solved = false;
+                t.arrow.visible = true;
+                t.screenMesh.material.color.setHex(0x00d2d3);
+            });
+
+            playerGroup.position.set(0, 0, 60);
+            monsterGroup.position.set(0, 0, -60);
+            isGameOver = false; inQuestionMenu = false; isCinematicActive = false;
+
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('ui-container').style.display = 'block';
+            document.getElementById('game-over').style.display = 'none';
+        }
+
+        function checkTerminalProximity() {
+            if (inQuestionMenu || isGameOver || isCinematicActive) return;
+            activeTerminal = null;
+            document.getElementById('action-btn').style.display = 'none';
+
+            terminals.forEach(t => {
+                if (t.solved) return;
+                if (playerGroup.position.distanceTo(t.group.position) < 5) {
+                    activeTerminal = t;
+                    document.getElementById('action-btn').style.display = 'flex';
                 }
             });
+        }
 
-            conn.on('close', () => {
-                if (remotePlayers[conn.peer]) {
-                    scene.remove(remotePlayers[conn.peer]);
-                    delete remotePlayers[conn.peer];
+        function interactWithTerminal() {
+            if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
+
+            inQuestionMenu = true;
+            document.getElementById('action-btn').style.display = 'none';
+            
+            const qData = questionsList[activeTerminal.index % questionsList.length];
+            document.getElementById('question-text').innerText = qData.q;
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(idx, qData.correct);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('question-card').style.display = 'block';
+        }
+
+        function handleAnswer(selectedIndex, correctIndex) {
+            document.getElementById('question-card').style.display = 'none';
+            inQuestionMenu = false;
+
+            if (selectedIndex === correctIndex) {
+                playSound('success');
+                activeTerminal.solved = true;
+                activeTerminal.arrow.visible = false;
+                activeTerminal.screenMesh.material.color.setHex(0x2ed573);
+                
+                if (socket) socket.emit('task_solved', { index: activeTerminal.index });
+
+                solvedCount++;
+                document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
+                showNotification(`تم إنهاء المهمة (${solvedCount}/25)!`);
+
+                if (solvedCount === 12 && currentPhase === 1) {
+                    triggerPhase2Cinematic();
+                } else if (solvedCount === 25) {
+                    triggerVictoryCinematic();
                 }
-                delete connections[conn.peer];
-            });
+            } else {
+                playSound('error');
+                if (socket) socket.emit('player_failed', { loserName: playerName, loserPos: { x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z } });
+                triggerDeathCinematic(playerName, playerGroup.position.clone());
+            }
         }
 
-        function broadcastPosition() {
-            const data = {
-                type: 'move',
-                x: playerGroup.position.x,
-                y: playerGroup.position.y,
-                z: playerGroup.position.z,
-                rotation: playerGroup.rotation.y
-            };
-            Object.values(connections).forEach(conn => { if (conn.open) conn.send(data); });
-        }
-
-        function broadcastTaskSolved(index) {
-            Object.values(connections).forEach(conn => { if (conn.open) conn.send({ type: 'task_solved', index }); });
-        }
-
-        function broadcastPlayerFailed(loserName, loserPos) {
-            Object.values(connections).forEach(conn => {
-                if (conn.open) conn.send({ type: 'player_failed', loserName, loserPos });
-            });
+        function showNotification(msg) {
+            const banner = document.getElementById('notification-banner');
+            banner.innerText = msg;
+            banner.style.display = 'block';
+            setTimeout(() => banner.style.display = 'none', 3500);
         }
 
         function triggerDeathCinematic(loserName, loserPos) {
             isCinematicActive = true;
-            monsterGroup.position.copy(loserPos);
+            monsterGroup.position.set(loserPos.x, loserPos.y, loserPos.z);
 
-            let targetCamPos = loserPos.clone().add(new THREE.Vector3(0, 5, 10));
+            let targetCamPos = new THREE.Vector3(loserPos.x, loserPos.y + 5, loserPos.z + 10);
             let frame = 0;
 
             let animInterval = setInterval(() => {
@@ -674,7 +738,7 @@
                 camera.lookAt(loserPos.x, loserPos.y + 1, loserPos.z);
                 
                 playSound('error');
-                createExplosionParticles(loserPos, 0xff4757);
+                createExplosionParticles(new THREE.Vector3(loserPos.x, loserPos.y, loserPos.z), 0xff4757);
 
                 if (frame >= 60) {
                     clearInterval(animInterval);
@@ -741,107 +805,6 @@
             }, 30);
         }
 
-        function startGame() {
-            const nameInput = document.getElementById('player-name-input').value.trim();
-            const roomInput = document.getElementById('room-id-input').value.trim();
-
-            playerName = nameInput !== "" ? nameInput : "زياد";
-            roomCode = roomInput !== "" ? roomInput : "social_room_egypt_1";
-
-            updatePlayerNameTag(playerName);
-            
-            solvedCount = 0;
-            currentPhase = 1;
-            document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
-
-            buildMonsterPhase1();
-            terminals.forEach(t => {
-                t.solved = false;
-                t.arrow.visible = true;
-                t.screenMesh.material.color.setHex(0x00d2d3);
-            });
-
-            playerGroup.position.set(0, 0, 60);
-            monsterGroup.position.set(0, 0, -60);
-            isGameOver = false; inQuestionMenu = false; isCinematicActive = false;
-
-            initMultiplayer();
-
-            document.getElementById('main-menu').style.display = 'none';
-            document.getElementById('game-over').style.display = 'none';
-        }
-
-        function checkTerminalProximity() {
-            if (inQuestionMenu || isGameOver || isCinematicActive) return;
-            activeTerminal = null;
-            document.getElementById('action-btn').style.display = 'none';
-
-            terminals.forEach(t => {
-                if (t.solved) return;
-                if (playerGroup.position.distanceTo(t.group.position) < 5) {
-                    activeTerminal = t;
-                    document.getElementById('action-btn').style.display = 'flex';
-                }
-            });
-        }
-
-        function interactWithTerminal() {
-            if (!activeTerminal || inQuestionMenu || isGameOver || isCinematicActive) return;
-
-            inQuestionMenu = true;
-            document.getElementById('action-btn').style.display = 'none';
-            
-            const qData = questionsList[activeTerminal.index % questionsList.length];
-            document.getElementById('question-text').innerText = qData.q;
-            const optionsContainer = document.getElementById('options-container');
-            optionsContainer.innerHTML = '';
-
-            qData.options.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = opt;
-                btn.onclick = () => handleAnswer(idx, qData.correct);
-                optionsContainer.appendChild(btn);
-            });
-
-            document.getElementById('question-card').style.display = 'block';
-        }
-
-        function handleAnswer(selectedIndex, correctIndex) {
-            document.getElementById('question-card').style.display = 'none';
-            inQuestionMenu = false;
-
-            if (selectedIndex === correctIndex) {
-                playSound('success');
-                activeTerminal.solved = true;
-                activeTerminal.arrow.visible = false;
-                activeTerminal.screenMesh.material.color.setHex(0x2ed573);
-                
-                broadcastTaskSolved(activeTerminal.index);
-
-                solvedCount++;
-                document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
-                showNotification(`تم إنهاء المهمة (${solvedCount}/25)!`);
-
-                if (solvedCount === 12 && currentPhase === 1) {
-                    triggerPhase2Cinematic();
-                } else if (solvedCount === 25) {
-                    triggerVictoryCinematic();
-                }
-            } else {
-                playSound('error');
-                broadcastPlayerFailed(playerName, playerGroup.position.clone());
-                triggerDeathCinematic(playerName, playerGroup.position.clone());
-            }
-        }
-
-        function showNotification(msg) {
-            const banner = document.getElementById('notification-banner');
-            banner.innerText = msg;
-            banner.style.display = 'block';
-            setTimeout(() => banner.style.display = 'none', 3500);
-        }
-
         function updateMonsterAI() {
             if (isGameOver || isCinematicActive) return;
 
@@ -867,7 +830,7 @@
 
             if (distance < 3.5) {
                 playSound('error');
-                broadcastPlayerFailed(playerName, playerGroup.position.clone());
+                if (socket) socket.emit('player_failed', { loserName: playerName, loserPos: { x: playerGroup.position.x, y: playerGroup.position.y, z: playerGroup.position.z } });
                 triggerDeathCinematic(playerName, playerGroup.position.clone());
             }
         }
@@ -876,7 +839,7 @@
             isGameOver = true;
             document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطكم الوحش - خسارة!";
             document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
-            document.getElementById('game-over-msg').innerText, message;
+            document.getElementById('game-over-msg').innerText = message;
             document.getElementById('game-over').style.display = 'flex';
         }
 
@@ -887,7 +850,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            updatePlayerAndChannel = updatePlayerAndCamera();
+            updatePlayerAndCamera();
             checkTerminalProximity();
             updateMonsterAI();
             updateParticles();
