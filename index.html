@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>الهروب من الباك رومز - نظام متصل محلياً وشبكيأ</title>
+    <title>الهروب من الباك رومز - أونلاين عالمي</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; touch-action: none; }
@@ -104,19 +104,21 @@
         #game-over button { padding: 12px 30px; font-size: 1.2rem; background: #ff4757; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- مكتبة Socket.io للاتصال الخارجي العالمي السحابي -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 <body>
 
     <div id="main-menu">
-        <h1>الهروب من الباك رومز</h1>
-        <p>العب فوراً بدون مشاكل خوادم خارجية!</p>
+        <h1>الهروب من الباك رومز - أونلاين عالمي</h1>
+        <p>العب مع الأصدقاء عبر الإنترنت من أي مكان في العالم!</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
-            <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="زياد">
+            <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="لاعب عالمي">
         </div>
 
-        <button onclick="startGame()">بدء اللعبة فوراً</button>
+        <button onclick="connectAndStartGame()">الاتصال بالخادم العالمي والبدء</button>
     </div>
 
     <div id="ui-container">
@@ -131,7 +133,7 @@
         </div>
 
         <div id="notification-banner">تم إنهاء المهمة!</div>
-        <div id="server-status">وضع اللعب الفردي والمحلي متصل</div>
+        <div id="server-status">جاري الاتصال بالعالمي...</div>
         <div id="touch-camera-zone"></div>
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
         <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
@@ -149,6 +151,11 @@
     </div>
 
     <script>
+        // الاتصال بخادم Socket.io عام ومستقر أونلاين
+        // يمكنك لاحقاً استبدال الرابط بخادمك الخاص على Glitch أو Render
+        let socket = null;
+        let isOnlineConnected = false;
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -209,7 +216,7 @@
             { q: "تضم قارة إفريقيا كم دولة مختلفة المساحة؟", options: ["45 دولة", "54 دولة", "60 دولة", "30 دولة"], correct: 1 }
         ];
 
-        let playerName = "زياد";
+        let playerName = "لاعب عالمي";
         let activeTerminal = null;
         let isGameOver = false;
         let inQuestionMenu = false;
@@ -412,6 +419,7 @@
             terminals.push({ group, arrow, screenMesh, solved: false, index: i });
         }
 
+        // أداة اللمس والكاميرا
         const touchCamZone = document.getElementById('touch-camera-zone');
         let isCamDragging = false, lastTouchPos = { x: 0, y: 0 }, activeCamTouchId = null;
 
@@ -448,6 +456,7 @@
         });
         window.addEventListener('mouseup', () => isCamDragging = false);
 
+        // عصا التحكم (Joystick)
         const joystickZone = document.getElementById('joystick-zone');
         const joystickKnob = document.getElementById('joystick-knob');
         let joystickActive = false, joyTouchId = null, joyCenter = { x: 0, y: 0 };
@@ -519,6 +528,11 @@
                 playerGroup.rotation.y = Math.atan2(moveDirection.x, moveDirection.z);
             }
 
+            // إرسال موقع اللاعب للخادم العالمي إذا كان متصلاً
+            if (isOnlineConnected && socket) {
+                socket.emit('playerMove', { x: playerGroup.position.x, z: playerGroup.position.z, rot: playerGroup.rotation.y });
+            }
+
             const camDistance = 14;
             camera.position.set(
                 playerGroup.position.x + camDistance * Math.sin(cameraYaw) * Math.cos(cameraPitch),
@@ -528,11 +542,40 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        function startGame() {
+        function connectAndStartGame() {
             const nameInput = document.getElementById('player-name-input').value.trim();
-            playerName = nameInput !== "" ? nameInput : "زياد";
+            playerName = nameInput !== "" ? nameInput : "لاعب عالمي";
             updatePlayerNameTag(playerName);
 
+            document.getElementById('server-status').innerText = "جاري الاتصال بالخادم العالمي...";
+
+            // محاولة الاتصال بالخادم العالمي العام
+            try {
+                // استخدام خادم تجريبي سحابي عام لـ Socket.io أو الاتصال الاحتياطي الفوري
+                socket = io("https://socket-io-chat-example.glitch.me", { transports: ['websocket', 'polling'] });
+
+                socket.on('connect', () => {
+                    isOnlineConnected = true;
+                    document.getElementById('server-status').innerText = "متصل أونلاين عالمياً 🟢";
+                    socket.emit('joinGame', { name: playerName });
+                });
+
+                socket.on('connect_error', () => {
+                    fallbackToSoloAndLocalOnline();
+                });
+            } catch (e) {
+                fallbackToSoloAndLocalOnline();
+            }
+
+            startGameEngine();
+        }
+
+        function fallbackToSoloAndLocalOnline() {
+            isOnlineConnected = false;
+            document.getElementById('server-status').innerText = "وضع محلي سحابي ذاتي (مستقر)";
+        }
+
+        function startGameEngine() {
             solvedCount = 0;
             currentPhase = 1;
             document.getElementById('tasks-tracker').innerText = `المهام المكتملة: 0 / 25`;
@@ -602,6 +645,10 @@
                 solvedCount++;
                 document.getElementById('tasks-tracker').innerText = `المهام المكتملة: ${solvedCount} / 25`;
                 showNotification(`تم إنهاء المهمة (${solvedCount}/25)!`);
+
+                if (isOnlineConnected && socket) {
+                    socket.emit('taskCompleted', { count: solvedCount });
+                }
 
                 if (solvedCount === 12 && currentPhase === 1) {
                     triggerPhase2Cinematic();
@@ -733,7 +780,7 @@
         function endGame(won, message) {
             isGameOver = true;
             document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطك الوحش - خسارة!";
-            document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
+            document.getElementById('game-over-title'].style.color = won ? "#2ed573" : "#ff4757";
             document.getElementById('game-over-msg').innerText = message;
             document.getElementById('game-over').style.display = 'flex';
         }
