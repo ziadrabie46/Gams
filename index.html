@@ -18,7 +18,7 @@
         #main-menu p { margin-bottom: 20px; color: #aaa; font-size: 1rem; }
         .input-group { margin: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .input-group label { font-size: 1.1rem; color: #f1c40f; }
-        #player-name-input {
+        .input-field {
             padding: 12px 20px; font-size: 1.1rem; border-radius: 8px; border: 2px solid #f1c40f;
             background: #1e272e; color: #fff; text-align: center; outline: none; width: 250px;
         }
@@ -54,7 +54,7 @@
 
         #server-status {
             position: absolute; bottom: 15px; right: 15px;
-            background: rgba(0,0,0,0.7); color: #2ed573; padding: 5px 15px;
+            background: rgba(0,0,0,0.7); color: #2ed573; padding: 8px 15px;
             border-radius: 8px; font-size: 0.9rem; font-weight: bold; z-index: 6;
         }
 
@@ -110,11 +110,16 @@
 
     <div id="main-menu">
         <h1>الهروب من الباك رومز (غرفة الدراسات)</h1>
-        <p>انضم إلى غرفة الدراسات الاجتماعية المشتركة والعب مع أصدقائك! احذروا الإجابة الخاطئة لكي لا يأكلكم الوحش.</p>
+        <p>انضم إلى غرفة الدراسات الاجتماعية المشتركة ولعب مع أصدقائك بوضع رقم أو اسم الغرفة نفسه!</p>
         
         <div class="input-group">
             <label for="player-name-input">اسم اللاعب:</label>
-            <input type="text" id="player-name-input" placeholder="ادخل اسمك..." maxlength="12" value="زياد">
+            <input type="text" id="player-name-input" class="input-field" placeholder="ادخل اسمك..." maxlength="12" value="زياد">
+        </div>
+
+        <div class="input-group">
+            <label for="room-id-input">رقم أو اسم الغرفة المشتركة:</label>
+            <input type="text" id="room-id-input" class="input-field" placeholder="مثال: room123" value="social_room_egypt_1">
         </div>
 
         <button onclick="startGame()">دخول غرفة الدراسات</button>
@@ -132,7 +137,7 @@
         </div>
 
         <div id="notification-banner">تم إنهاء المهمة!</div>
-        <div id="server-status">جاري الاتصال بالغرفة المشتركة...</div>
+        <div id="server-status">غير متصل</div>
         <div id="touch-camera-zone"></div>
         <div id="joystick-zone"><div id="joystick-knob"></div></div>
         <div id="action-btn" onclick="interactWithTerminal()">حل!</div>
@@ -191,7 +196,7 @@
             { q: "يمر خط الجرينتش الرئيسي في قارة إفريقيا في نصفها:", options: ["الشرقي", "الغربي", "الشمالي", "الجنوبي"], correct: 1 },
             { q: "تقع معظم مساحة قارة إفريقيا في النصف الشمالي بينما يقع الثلث الآخر في النصف:", options: ["الشرقي", "الغربي", "الجنوبي", "القطبي"], correct: 2 },
             { q: "يحد قارة إفريقيا من جهة الشمال البحر المتوسط الذي يفصلها عن قارة:", options: ["آسيا", "أوروبا", "أمريكا الشمالية", "أستراليا"], correct: 1 },
-            { q: "يفصل البحر الأحمر والمحيط الهندي قارة إفريقيا عن قارة:", options: ["أوروبا", "آسيا", "أمريكا الجنوبية", "ออสเตรเลีย"], correct: 1 },
+            { q: "يفصل البحر الأحمر والمحيط الهندي قارة إفريقيا عن قارة:", options: ["أوروبا", "آسيا", "أمريكا الجنوبية", "أستراليا"], correct: 1 },
             { q: "يحد قارة إفريقيا من جهة الغرب المحيط:", options: ["الهادي", "الهندي", "الأطلنطي", "القطبي الشمالي"], correct: 2 },
             { q: "تقترب قارة إفريقيا من قارة آسيا عند مضيق:", options: ["جبل طارق", "باب المندب", "هرمز", "موزمبيق"], correct: 1 },
             { q: "تقترب قارة إفريقيا من قارة أوروبا عند مضيق:", options: ["جبل طارق", "باب المندب", "مالقا", "البسفور"], correct: 0 },
@@ -218,6 +223,7 @@
         let inQuestionMenu = false;
         let isCinematicActive = false;
         let playerName = "زياد";
+        let roomCode = "social_room_egypt_1";
         let solvedCount = 0;
         let currentPhase = 1;
 
@@ -226,8 +232,10 @@
         let cameraPitch = 0.35;
 
         let peer = null;
+        let myPeerId = "";
         let connections = {};
         let remotePlayers = {};
+        let knownPeers = new Set();
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0a00);
@@ -562,15 +570,19 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.5, playerGroup.position.z);
         }
 
-        function initSocialStudiesRoomServer() {
-            const myId = "social_studies_room_ziad_" + Math.floor(Math.random() * 899 + 100);
-            peer = new Peer(myId);
+        // --- نظام الاتصال المطور والثابت (Multiplayer Connection Engine) ---
+        function initMultiplayer() {
+            // توليد معرف فريد يعتمد على اسم الغرفة لكي يرتبط الأصدقاء في نفس الغرفة تماماً
+            const cleanRoomName = roomCode.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+            myPeerId = cleanRoomName + "_" + Math.floor(Math.random() * 8999 + 1000);
+
+            peer = new Peer(myPeerId);
 
             peer.on('open', (id) => {
-                document.getElementById('server-status').innerText = "متصل بغرفة الدراسات الاجتماعية المشتركة";
-                
-                for (let i = 100; i <= 900; i += 100) {
-                    let targetId = "social_studies_room_ziad_" + i;
+                document.getElementById('server-status').innerText = "متصل بالغرفة: " + roomCode;
+                // محاولة الاتصال التلقائي بـ 10 أرقام محتملة لنفس الغرفة لضمان الربط السريع
+                for (let i = 1000; i < 1005; i++) {
+                    let targetId = cleanRoomName + "_" + i;
                     if (targetId !== id && !connections[targetId]) {
                         connectToPeer(targetId);
                     }
@@ -578,9 +590,15 @@
             });
 
             peer.on('connection', (conn) => setupConnection(conn));
+
+            peer.on('error', (err) => {
+                console.warn("PeerJS error: ", err);
+                document.getElementById('server-status').innerText = "خطأ بالاتصال، جارِ إعادة المحاولة...";
+            });
         }
 
         function connectToPeer(targetId) {
+            if (connections[targetId] || targetId === myPeerId) return;
             const conn = peer.connect(targetId);
             if (conn) setupConnection(conn);
         }
@@ -609,7 +627,6 @@
                         term.screenMesh.material.color.setHex(0x2ed573);
                     }
                 } else if (data.type === 'player_failed') {
-                    // إذا أخطأ لاعب آخر في الفريق، يبدأ الوحش بالهجوم عليه وينتهي الفريق
                     triggerDeathCinematic(data.loserName, data.loserPos);
                 }
             });
@@ -646,7 +663,7 @@
 
         function triggerDeathCinematic(loserName, loserPos) {
             isCinematicActive = true;
-            monsterGroup.position.copy(loserPos); // ينط الوحش مباشرة عند مكان اللاعب الذي أخطأ
+            monsterGroup.position.copy(loserPos);
 
             let targetCamPos = loserPos.clone().add(new THREE.Vector3(0, 5, 10));
             let frame = 0;
@@ -726,7 +743,11 @@
 
         function startGame() {
             const nameInput = document.getElementById('player-name-input').value.trim();
+            const roomInput = document.getElementById('room-id-input').value.trim();
+
             playerName = nameInput !== "" ? nameInput : "زياد";
+            roomCode = roomInput !== "" ? roomInput : "social_room_egypt_1";
+
             updatePlayerNameTag(playerName);
             
             solvedCount = 0;
@@ -744,7 +765,7 @@
             monsterGroup.position.set(0, 0, -60);
             isGameOver = false; inQuestionMenu = false; isCinematicActive = false;
 
-            initSocialStudiesRoomServer();
+            initMultiplayer();
 
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
@@ -808,7 +829,6 @@
                     triggerVictoryCinematic();
                 }
             } else {
-                // عند الخطأ: يتم إعلان اسم الخاسر وانقضاض الوحش عليه لتهديد الفريق وخسارته
                 playSound('error');
                 broadcastPlayerFailed(playerName, playerGroup.position.clone());
                 triggerDeathCinematic(playerName, playerGroup.position.clone());
@@ -856,7 +876,7 @@
             isGameOver = true;
             document.getElementById('game-over-title').innerText = won ? "فوز أسطوري!" : "التقطكم الوحش - خسارة!";
             document.getElementById('game-over-title').style.color = won ? "#2ed573" : "#ff4757";
-            document.getElementById('game-over-msg').innerText = message;
+            document.getElementById('game-over-msg').innerText, message;
             document.getElementById('game-over').style.display = 'flex';
         }
 
@@ -867,7 +887,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            updatePlayerAndCamera();
+            updatePlayerAndChannel = updatePlayerAndCamera();
             checkTerminalProximity();
             updateMonsterAI();
             updateParticles();
@@ -896,4 +916,3 @@
     </script>
 </body>
 </html>
-
